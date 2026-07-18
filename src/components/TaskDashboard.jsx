@@ -1,4 +1,14 @@
-export function TaskDashboard({ task, contextLocked = false, onComplete, onDecompose, onOpenCapture }) {
+import { ReminderPicker } from './ReminderPicker.jsx'
+
+export function TaskDashboard({
+  task,
+  contextLocked = false,
+  onComplete,
+  onDecompose,
+  onOpenCapture,
+  onSetReminder,
+  onClearReminder,
+}) {
   if (!task) {
     return (
       <div className="plai-section">
@@ -27,6 +37,13 @@ export function TaskDashboard({ task, contextLocked = false, onComplete, onDecom
           )}
         </div>
       </div>
+
+      <ReminderPicker
+        remindAt={task.remindAt}
+        onSetReminder={(iso) => onSetReminder(task.id, iso)}
+        onClearReminder={() => onClearReminder(task.id)}
+      />
+
       {!contextLocked && (
         <button type="button" className="plai-btn mt-6" onClick={onOpenCapture}>
           + Ajouter une tâche
