@@ -7,7 +7,7 @@ function getSpeechRecognitionCtor() {
     : undefined
 }
 
-export function QuickCapture({ onAdd }) {
+export function QuickCapture({ onAdd, placeholder = 'ex : Ranger la trousse' }) {
   const [text, setText] = useState('')
   const [listening, setListening] = useState(false)
   const recognitionRef = useRef(null)
@@ -36,17 +36,29 @@ export function QuickCapture({ onAdd }) {
       const transcript = event.results[0][0].transcript
       setText((prev) => (prev ? `${prev} ${transcript}` : transcript))
     }
-    recognition.onend = () => setListening(false)
+    recognition.onend = () => {
+      setListening(false)
+      recognitionRef.current = null
+    }
+    recognition.onerror = () => {
+      setListening(false)
+      recognitionRef.current = null
+    }
     recognitionRef.current = recognition
-    recognition.start()
-    setListening(true)
+    try {
+      recognition.start()
+      setListening(true)
+    } catch {
+      setListening(false)
+      recognitionRef.current = null
+    }
   }
 
   return (
     <div className="flex gap-2 items-center">
       <input
         className="plai-input flex-1"
-        placeholder="ex : Ranger la trousse"
+        placeholder={placeholder}
         value={text}
         onChange={(e) => setText(e.target.value)}
       />
