@@ -15,7 +15,7 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
 
   return (
     <div className="plai-section">
-      <h1 className="text-xl font-bold mb-4">Mes contextes</h1>
+      <h2>Mes contextes</h2>
 
       {contexts.length === 0 && (
         <p className="plai-empty">Aucun contexte pour l'instant. Créez-en un pour commencer.</p>
@@ -36,8 +36,8 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
       </div>
 
       <div className="flex gap-2 items-end">
-        <div className="flex-1">
-          <label htmlFor={inputId} className="block text-sm mb-1">
+        <div className="plai-field flex-1">
+          <label htmlFor={inputId} className="plai-label">
             Nom du contexte
           </label>
           <input
@@ -47,6 +47,9 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
             value={label}
             onChange={(e) => setLabel(e.target.value)}
           />
+          <p className="plai-help">
+            Ce nom identifie un domaine de vie (école, maison, devoirs...) pour regrouper les tâches qui s'y rapportent.
+          </p>
         </div>
         <button type="button" className="plai-btn" onClick={handleCreate}>
           Créer
