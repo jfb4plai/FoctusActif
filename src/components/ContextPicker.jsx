@@ -35,7 +35,7 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
         ))}
       </div>
 
-      <div className="flex gap-2 items-end">
+      <div className="flex gap-2">
         <div className="plai-field flex-1">
           <label htmlFor={inputId} className="plai-label">
             Nom du contexte
@@ -51,7 +51,7 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
             Ce nom identifie un domaine de vie (école, maison, devoirs...) pour regrouper les tâches qui s'y rapportent.
           </p>
         </div>
-        <button type="button" className="plai-btn" onClick={handleCreate}>
+        <button type="button" className="plai-btn mt-7" onClick={handleCreate}>
           Créer
         </button>
       </div>
