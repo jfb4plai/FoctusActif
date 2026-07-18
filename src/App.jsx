@@ -25,12 +25,26 @@ function AppInner() {
   }, [store, activeContextId])
 
   useEffect(() => {
-    refreshContexts()
-  }, [refreshContexts])
+    if (!store) return
+    let cancelled = false
+    store.listContexts().then((result) => {
+      if (!cancelled) setContexts(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [store])
 
   useEffect(() => {
-    refreshCurrentTask()
-  }, [refreshCurrentTask])
+    if (!store || !activeContextId) return
+    let cancelled = false
+    store.getNextTask(activeContextId).then((result) => {
+      if (!cancelled) setCurrentTask(result)
+    })
+    return () => {
+      cancelled = true
+    }
+  }, [store, activeContextId])
 
   useEffect(() => {
     async function loadSubtasks() {
