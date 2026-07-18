@@ -149,9 +149,13 @@ function App() {
         }}
         onSignUp={async (email, password) => {
           const { supabase } = await import('./lib/supabaseClient.js')
-          const { error } = await supabase.auth.signUp({ email, password })
+          const { data, error } = await supabase.auth.signUp({ email, password })
           if (error) throw error
-          setAuthed(true)
+          if (data.session) {
+            setAuthed(true)
+            return { needsConfirmation: false }
+          }
+          return { needsConfirmation: true }
         }}
       />
     )

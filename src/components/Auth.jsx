@@ -5,16 +5,23 @@ export function Auth({ onSignIn, onSignUp }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
+  const [info, setInfo] = useState('')
   const emailId = useId()
   const passwordId = useId()
 
   async function handleSubmit() {
     setError('')
+    setInfo('')
     try {
       if (mode === 'signin') {
         await onSignIn(email, password)
       } else {
-        await onSignUp(email, password)
+        const result = await onSignUp(email, password)
+        if (result?.needsConfirmation) {
+          setInfo(
+            'Compte créé — vérifiez votre boîte mail et cliquez sur le lien de confirmation avant de vous connecter.',
+          )
+        }
       }
     } catch {
       setError('Identifiants incorrects, ou compte déjà existant. Vérifiez et réessayez.')
@@ -31,6 +38,7 @@ export function Auth({ onSignIn, onSignUp }) {
       <h2>{mode === 'signin' ? 'Se connecter' : 'Créer un compte'}</h2>
 
       {error && <p className="plai-error">{error}</p>}
+      {info && <p className="plai-success">{info}</p>}
 
       <form onSubmit={handleFormSubmit}>
         <div className="plai-field">

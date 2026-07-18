@@ -37,4 +37,16 @@ describe('Auth', () => {
 
     expect(onSignUp).toHaveBeenCalledWith('nouveau@example.com', 'motdepasse123')
   })
+
+  it('affiche un message de confirmation email si le compte nécessite une validation', async () => {
+    const onSignUp = vi.fn().mockResolvedValue({ needsConfirmation: true })
+    render(<Auth onSignIn={vi.fn()} onSignUp={onSignUp} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /créer un compte/i }))
+    await userEvent.type(screen.getByLabelText(/adresse e-mail/i), 'nouveau@example.com')
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'motdepasse123')
+    await userEvent.click(screen.getByRole('button', { name: /^créer mon compte$/i }))
+
+    expect(await screen.findByText(/vérifiez votre boîte mail/i)).toBeInTheDocument()
+  })
 })
