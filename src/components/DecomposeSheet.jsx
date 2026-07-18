@@ -12,7 +12,11 @@ export function DecomposeSheet({ parentTitle, subtasks, onAddSubtask, onClose })
 
       <ul className="mb-4">
         {subtasks.map((subtask) => (
-          <li key={subtask.id} data-testid="subtask-item" className="plai-card mb-2">
+          <li
+            key={subtask.id}
+            data-testid="subtask-item"
+            className={`plai-card mb-2 ${subtask.status === 'done' ? 'line-through opacity-50' : ''}`}
+          >
             {subtask.title}
           </li>
         ))}
