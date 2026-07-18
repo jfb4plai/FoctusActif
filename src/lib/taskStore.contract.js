@@ -96,5 +96,30 @@ export function runTaskStoreContractTests(createStore) {
       const next = await store.getNextTask(context.id)
       expect(next.id).toBe(second.id)
     })
+
+    it('getNextTask retourne null si toutes les tâches du contexte sont terminées', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const task = await store.addTask(context.id, 'Ranger sa chambre')
+      await store.completeTask(task.id)
+
+      expect(await store.getNextTask(context.id)).toBeNull()
+    })
+
+    it('getNextTask privilégie la sous-étape restante d\'une racine avant de passer à la racine suivante', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+
+      const rootA = await store.addTask(context.id, 'Tâche A')
+      const stepA = await store.addTask(context.id, 'Sous-étape de A', rootA.id)
+      await store.completeTask(stepA.id)
+      // rootA a maintenant sa seule sous-étape terminée : rootA lui-même devient
+      // la tâche à faire, avant même de considérer rootB.
+
+      await store.addTask(context.id, 'Tâche B')
+
+      const next = await store.getNextTask(context.id)
+      expect(next.id).toBe(rootA.id)
+    })
   })
 }

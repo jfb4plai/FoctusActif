@@ -9,6 +9,13 @@ async function listSubtasksOf(db, parentTaskId) {
     .sort((a, b) => a.stepOrder - b.stepOrder)
 }
 
+async function listRootTasksOf(db, contextId) {
+  const all = await getAll(db, 'tasks')
+  return all
+    .filter((t) => t.contextId === contextId && t.parentTaskId === null)
+    .sort((a, b) => a.stepOrder - b.stepOrder)
+}
+
 function upgrade(db) {
   if (!db.objectStoreNames.contains('contexts')) {
     db.createObjectStore('contexts', { keyPath: 'id' })
@@ -40,11 +47,10 @@ export async function createLocalStore(dbName = 'focusactif') {
     },
 
     async addTask(contextId, title, parentTaskId = null) {
-      let stepOrder = 0
-      if (parentTaskId) {
-        const siblings = await listSubtasksOf(db, parentTaskId)
-        stepOrder = siblings.length
-      }
+      const siblings = parentTaskId
+        ? await listSubtasksOf(db, parentTaskId)
+        : await listRootTasksOf(db, contextId)
+      const stepOrder = siblings.length
       const task = {
         id: crypto.randomUUID(),
         contextId,
@@ -63,18 +69,20 @@ export async function createLocalStore(dbName = 'focusactif') {
       return listSubtasksOf(db, parentTaskId)
     },
 
+    // Une seule tâche affichée à la fois : les tâches racines sont parcourues par
+    // ordre de création (stepOrder, attribué séquentiellement à la création — fiable
+    // même en cas d'égalité de createdAt à la milliseconde près), les racines déjà
+    // terminées sont ignorées ; pour la première racine encore active, sa première
+    // sous-étape non terminée (par stepOrder) est prioritaire sur la racine elle-même,
+    // qui ne redevient "la tâche à faire" que lorsque toutes ses sous-étapes sont
+    // terminées.
     async getNextTask(contextId) {
-      const all = await getAll(db, 'tasks')
-      const rootTasks = all
-        .filter((t) => t.contextId === contextId && t.parentTaskId === null)
-        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+      const rootTasks = await listRootTasksOf(db, contextId)
 
       for (const root of rootTasks) {
         if (root.status === 'done') continue
 
-        const subtasks = all
-          .filter((t) => t.parentTaskId === root.id && t.status === 'todo')
-          .sort((a, b) => a.stepOrder - b.stepOrder)
+        const subtasks = (await listSubtasksOf(db, root.id)).filter((t) => t.status === 'todo')
 
         return subtasks.length > 0 ? subtasks[0] : root
       }
