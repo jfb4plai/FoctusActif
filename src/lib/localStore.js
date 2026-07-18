@@ -1,4 +1,5 @@
-import { openDb, put, getAll, get, remove } from './idbHelpers.js'
+// eslint-disable-next-line no-unused-vars -- used by completeTask, added in Task 4
+import { openDb, put, getAll, get } from './idbHelpers.js'
 
 const DB_VERSION = 1
 
