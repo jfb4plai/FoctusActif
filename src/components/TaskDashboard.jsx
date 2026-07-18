@@ -18,9 +18,11 @@ export function TaskDashboard({ task, onComplete, onDecompose, onOpenCapture }) 
           <button type="button" className="plai-btn" onClick={() => onComplete(task.id)}>
             Fait ✓
           </button>
-          <button type="button" className="plai-btn" onClick={() => onDecompose(task.id)}>
-            Décomposer
-          </button>
+          {!task.parentTaskId && (
+            <button type="button" className="plai-btn" onClick={() => onDecompose(task.id)}>
+              Décomposer
+            </button>
+          )}
         </div>
       </div>
       <button type="button" className="plai-btn mt-6" onClick={onOpenCapture}>

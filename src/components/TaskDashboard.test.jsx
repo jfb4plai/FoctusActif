@@ -37,4 +37,12 @@ describe('TaskDashboard', () => {
     await userEvent.click(screen.getByRole('button', { name: /décomposer/i }))
     expect(onDecompose).toHaveBeenCalledWith('t1')
   })
+
+  it('ne propose pas de décomposer une tâche qui est déjà une sous-tâche', () => {
+    const task = { id: 'sub1', title: 'Rédiger l\'introduction', status: 'todo', parentTaskId: 't1' }
+    render(
+      <TaskDashboard task={task} onComplete={vi.fn()} onDecompose={vi.fn()} onOpenCapture={vi.fn()} />,
+    )
+    expect(screen.queryByRole('button', { name: /décomposer/i })).not.toBeInTheDocument()
+  })
 })
