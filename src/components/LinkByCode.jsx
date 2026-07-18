@@ -7,8 +7,13 @@ export function LinkByCode({ role, onGenerate, onClaim }) {
   const claimInputId = useId()
 
   async function handleGenerate() {
-    const link = await onGenerate(role)
-    setGeneratedCode(link.invite_code)
+    setError('')
+    try {
+      const link = await onGenerate(role)
+      setGeneratedCode(link.invite_code)
+    } catch (err) {
+      setError(err.message)
+    }
   }
 
   async function handleClaim() {
