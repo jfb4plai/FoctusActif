@@ -112,9 +112,12 @@ function AppInner() {
     )
   }
 
+  const activeContext = contexts.find((c) => c.id === activeContextId)
+
   return (
     <TaskDashboard
       task={currentTask}
+      contextLocked={Boolean(activeContext?.locked)}
       onComplete={handleComplete}
       onDecompose={setDecomposing}
       onOpenCapture={() => setCapturing(true)}

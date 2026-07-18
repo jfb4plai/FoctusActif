@@ -1,11 +1,13 @@
-export function TaskDashboard({ task, onComplete, onDecompose, onOpenCapture }) {
+export function TaskDashboard({ task, contextLocked = false, onComplete, onDecompose, onOpenCapture }) {
   if (!task) {
     return (
       <div className="plai-section">
         <p className="plai-empty">Aucune tâche ici. Ajoutez-en une pour commencer.</p>
-        <button type="button" className="plai-btn mt-4" onClick={onOpenCapture}>
-          + Ajouter une tâche
-        </button>
+        {!contextLocked && (
+          <button type="button" className="plai-btn mt-4" onClick={onOpenCapture}>
+            + Ajouter une tâche
+          </button>
+        )}
       </div>
     )
   }
@@ -18,16 +20,18 @@ export function TaskDashboard({ task, onComplete, onDecompose, onOpenCapture }) 
           <button type="button" className="plai-btn" onClick={() => onComplete(task.id)}>
             Fait ✓
           </button>
-          {!task.parentTaskId && (
+          {!contextLocked && !task.parentTaskId && (
             <button type="button" className="plai-btn" onClick={() => onDecompose(task.id)}>
               Décomposer
             </button>
           )}
         </div>
       </div>
-      <button type="button" className="plai-btn mt-6" onClick={onOpenCapture}>
-        + Ajouter une tâche
-      </button>
+      {!contextLocked && (
+        <button type="button" className="plai-btn mt-6" onClick={onOpenCapture}>
+          + Ajouter une tâche
+        </button>
+      )}
     </div>
   )
 }

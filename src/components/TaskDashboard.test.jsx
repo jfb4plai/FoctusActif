@@ -45,4 +45,20 @@ describe('TaskDashboard', () => {
     )
     expect(screen.queryByRole('button', { name: /décomposer/i })).not.toBeInTheDocument()
   })
+
+  it('masque les actions de capture/décomposition si le contexte est verrouillé', () => {
+    const task = { id: 't1', title: 'Choisir le sujet', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard
+        task={task}
+        contextLocked
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+      />,
+    )
+    expect(screen.queryByRole('button', { name: /décomposer/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ajouter une tâche/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /fait/i })).toBeInTheDocument()
+  })
 })
