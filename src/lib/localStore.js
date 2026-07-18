@@ -1,4 +1,3 @@
-// eslint-disable-next-line no-unused-vars -- used by completeTask, added in Task 4
 import { openDb, put, getAll, get } from './idbHelpers.js'
 
 const DB_VERSION = 1
@@ -62,6 +61,31 @@ export async function createLocalStore(dbName = 'focusactif') {
 
     async listSubtasks(parentTaskId) {
       return listSubtasksOf(db, parentTaskId)
+    },
+
+    async getNextTask(contextId) {
+      const all = await getAll(db, 'tasks')
+      const rootTasks = all
+        .filter((t) => t.contextId === contextId && t.parentTaskId === null)
+        .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+
+      for (const root of rootTasks) {
+        if (root.status === 'done') continue
+
+        const subtasks = all
+          .filter((t) => t.parentTaskId === root.id && t.status === 'todo')
+          .sort((a, b) => a.stepOrder - b.stepOrder)
+
+        return subtasks.length > 0 ? subtasks[0] : root
+      }
+
+      return null
+    },
+
+    async completeTask(taskId) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, status: 'done', doneAt: new Date().toISOString() })
     },
   }
 }
