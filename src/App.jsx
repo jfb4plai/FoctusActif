@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { StoreProvider, useTaskStore } from './context/StoreContext.jsx'
+import { StorageSetup } from './components/StorageSetup.jsx'
+import { Auth } from './components/Auth.jsx'
 import { ContextPicker } from './components/ContextPicker.jsx'
 import { TaskDashboard } from './components/TaskDashboard.jsx'
 import { QuickCapture } from './components/QuickCapture.jsx'
@@ -121,8 +123,39 @@ function AppInner() {
 }
 
 function App() {
+  const [storageMode, setStorageMode] = useState(null)
+  const [authed, setAuthed] = useState(false)
+
+  if (!storageMode) {
+    return (
+      <StorageSetup
+        onChooseLocal={() => setStorageMode('local')}
+        onChooseAccount={() => setStorageMode('account')}
+      />
+    )
+  }
+
+  if (storageMode === 'account' && !authed) {
+    return (
+      <Auth
+        onSignIn={async (email, password) => {
+          const { supabase } = await import('./lib/supabaseClient.js')
+          const { error } = await supabase.auth.signInWithPassword({ email, password })
+          if (error) throw error
+          setAuthed(true)
+        }}
+        onSignUp={async (email, password) => {
+          const { supabase } = await import('./lib/supabaseClient.js')
+          const { error } = await supabase.auth.signUp({ email, password })
+          if (error) throw error
+          setAuthed(true)
+        }}
+      />
+    )
+  }
+
   return (
-    <StoreProvider>
+    <StoreProvider storageMode={storageMode}>
       <AppInner />
     </StoreProvider>
   )

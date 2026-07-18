@@ -7,6 +7,8 @@ describe('App — parcours élève autonome', () => {
   it('créer un contexte → capturer une tâche → décomposer → terminer', async () => {
     render(<App />)
 
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+
     // Créer un contexte
     await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Devoirs')
     await userEvent.click(screen.getByRole('button', { name: /créer/i }))
