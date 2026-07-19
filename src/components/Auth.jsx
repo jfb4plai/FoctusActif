@@ -1,5 +1,23 @@
 import { useId, useState } from 'react'
 
+function explainAuthError(error) {
+  const message = error?.message || ''
+
+  if (/at least \d+ characters/i.test(message)) {
+    return 'Le mot de passe doit contenir au moins 6 caractères.'
+  }
+  if (/rate limit/i.test(message)) {
+    return 'Trop de tentatives. Patientez quelques minutes avant de réessayer.'
+  }
+  if (/invalid login credentials/i.test(message)) {
+    return 'Identifiants incorrects. Vérifiez votre e-mail et votre mot de passe.'
+  }
+  if (/user already registered|already exists/i.test(message)) {
+    return "Un compte existe déjà avec cette adresse e-mail. Utilisez « J'ai déjà un compte » pour vous connecter."
+  }
+  return 'Une erreur est survenue. Vérifiez votre e-mail et votre mot de passe (au moins 6 caractères), puis réessayez.'
+}
+
 export function Auth({ onSignIn, onSignUp }) {
   const [mode, setMode] = useState('signin')
   const [email, setEmail] = useState('')
@@ -27,8 +45,8 @@ export function Auth({ onSignIn, onSignUp }) {
           )
         }
       }
-    } catch {
-      setError('Identifiants incorrects, ou compte déjà existant. Vérifiez et réessayez.')
+    } catch (err) {
+      setError(explainAuthError(err))
     }
   }
 

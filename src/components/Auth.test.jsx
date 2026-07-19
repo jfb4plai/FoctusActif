@@ -64,4 +64,33 @@ describe('Auth', () => {
     ).toBeInTheDocument()
     expect(screen.queryByText(/vérifiez votre boîte mail/i)).not.toBeInTheDocument()
   })
+
+  it('affiche un message explicite si le mot de passe est trop court', async () => {
+    const onSignUp = vi
+      .fn()
+      .mockRejectedValue(new Error('Password should be at least 6 characters.'))
+    render(<Auth onSignIn={vi.fn()} onSignUp={onSignUp} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /créer un compte/i }))
+    await userEvent.type(screen.getByLabelText(/adresse e-mail/i), 'nouveau@example.com')
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'abcde')
+    await userEvent.click(screen.getByRole('button', { name: /^créer mon compte$/i }))
+
+    expect(
+      await screen.findByText(/mot de passe doit contenir au moins 6 caractères/i),
+    ).toBeInTheDocument()
+  })
+
+  it('affiche un message explicite en cas de trop de tentatives', async () => {
+    const onSignIn = vi
+      .fn()
+      .mockRejectedValue(new Error('email rate limit exceeded'))
+    render(<Auth onSignIn={onSignIn} onSignUp={vi.fn()} />)
+
+    await userEvent.type(screen.getByLabelText(/adresse e-mail/i), 'eleve@example.com')
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'motdepasse123')
+    await userEvent.click(screen.getByRole('button', { name: /se connecter/i }))
+
+    expect(await screen.findByText(/trop de tentatives/i)).toBeInTheDocument()
+  })
 })
