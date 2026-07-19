@@ -17,7 +17,11 @@ export function Auth({ onSignIn, onSignUp }) {
         await onSignIn(email, password)
       } else {
         const result = await onSignUp(email, password)
-        if (result?.needsConfirmation) {
+        if (result?.alreadyExists) {
+          setError(
+            "Un compte existe déjà avec cette adresse e-mail. Utilisez « J'ai déjà un compte » pour vous connecter.",
+          )
+        } else if (result?.needsConfirmation) {
           setInfo(
             'Compte créé — vérifiez votre boîte mail et cliquez sur le lien de confirmation avant de vous connecter.',
           )

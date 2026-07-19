@@ -49,4 +49,19 @@ describe('Auth', () => {
 
     expect(await screen.findByText(/vérifiez votre boîte mail/i)).toBeInTheDocument()
   })
+
+  it('affiche un message explicite si un compte existe déjà avec cet e-mail', async () => {
+    const onSignUp = vi.fn().mockResolvedValue({ alreadyExists: true })
+    render(<Auth onSignIn={vi.fn()} onSignUp={onSignUp} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /créer un compte/i }))
+    await userEvent.type(screen.getByLabelText(/adresse e-mail/i), 'existe-deja@example.com')
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'motdepasse123')
+    await userEvent.click(screen.getByRole('button', { name: /^créer mon compte$/i }))
+
+    expect(
+      await screen.findByText(/un compte existe déjà avec cette adresse e-mail/i),
+    ).toBeInTheDocument()
+    expect(screen.queryByText(/vérifiez votre boîte mail/i)).not.toBeInTheDocument()
+  })
 })

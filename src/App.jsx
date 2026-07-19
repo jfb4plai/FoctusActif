@@ -198,6 +198,13 @@ function App() {
             setAuthed(true)
             return { needsConfirmation: false }
           }
+          // Supabase renvoie toujours une réponse "compte créé" pour ne pas révéler
+          // si l'e-mail existe déjà (anti-énumération) — mais un tableau `identities`
+          // vide est le signal documenté d'un compte déjà existant et confirmé,
+          // pour lequel aucun e-mail n'est réellement envoyé.
+          if (data.user?.identities?.length === 0) {
+            return { alreadyExists: true }
+          }
           return { needsConfirmation: true }
         }}
       />
