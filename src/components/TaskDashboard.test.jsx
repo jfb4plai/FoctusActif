@@ -28,6 +28,33 @@ describe('TaskDashboard', () => {
     expect(screen.getByText(/aucune tâche/i)).toBeInTheDocument()
   })
 
+  it('rappelle le contexte actif (emoji + nom), avec ou sans tâche', () => {
+    const { rerender } = render(
+      <TaskDashboard
+        task={null}
+        contextLabel="routine du matin"
+        contextEmoji="📌"
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/routine du matin/)).toBeInTheDocument()
+
+    const task = { id: 't1', title: 'Se brosser les dents', status: 'todo' }
+    rerender(
+      <TaskDashboard
+        task={task}
+        contextLabel="routine du matin"
+        contextEmoji="📌"
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+      />,
+    )
+    expect(screen.getByText(/routine du matin/)).toBeInTheDocument()
+  })
+
   it('déclenche onDecompose avec l\'id de la tâche courante', async () => {
     const onDecompose = vi.fn()
     const task = { id: 't1', title: 'Faire l\'exposé', status: 'todo' }

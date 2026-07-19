@@ -2,6 +2,8 @@ import { ReminderPicker } from './ReminderPicker.jsx'
 
 export function TaskDashboard({
   task,
+  contextLabel,
+  contextEmoji,
   contextLocked = false,
   onComplete,
   onDecompose,
@@ -9,9 +11,16 @@ export function TaskDashboard({
   onSetReminder,
   onClearReminder,
 }) {
+  const contextReminder = contextLabel && (
+    <p className="plai-help mb-4">
+      Contexte actuel : {contextEmoji} {contextLabel}
+    </p>
+  )
+
   if (!task) {
     return (
       <div className="plai-section">
+        {contextReminder}
         <p className="plai-empty">Aucune tâche ici. Ajoutez-en une pour commencer.</p>
         {!contextLocked && (
           <button type="button" className="plai-btn mt-4" onClick={onOpenCapture}>
@@ -24,6 +33,7 @@ export function TaskDashboard({
 
   return (
     <div className="plai-section">
+      {contextReminder}
       <div className="plai-card text-center py-10">
         <p className="text-2xl font-serif mb-6">{task.title}</p>
         <div className="flex justify-center gap-3">

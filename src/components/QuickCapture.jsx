@@ -1,5 +1,5 @@
 // src/components/QuickCapture.jsx
-import { useRef, useState } from 'react'
+import { useId, useRef, useState } from 'react'
 
 function getSpeechRecognitionCtor() {
   return typeof window !== 'undefined'
@@ -11,6 +11,7 @@ export function QuickCapture({ onAdd, placeholder = 'ex : Ranger la trousse' }) 
   const [text, setText] = useState('')
   const [listening, setListening] = useState(false)
   const recognitionRef = useRef(null)
+  const inputId = useId()
 
   const SpeechRecognitionCtor = getSpeechRecognitionCtor()
 
@@ -55,26 +56,33 @@ export function QuickCapture({ onAdd, placeholder = 'ex : Ranger la trousse' }) 
   }
 
   return (
-    <div className="flex gap-2 items-center">
-      <input
-        className="plai-input flex-1"
-        placeholder={placeholder}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-      />
-      {SpeechRecognitionCtor && (
-        <button
-          type="button"
-          className="plai-btn"
-          onClick={toggleDictation}
-          aria-pressed={listening}
-        >
-          {listening ? 'Arrêter' : 'Dicter 🎤'}
+    <div className="plai-field">
+      <label htmlFor={inputId} className="plai-label">
+        Titre de la tâche
+      </label>
+      <div className="flex gap-2 items-center">
+        <input
+          id={inputId}
+          className="plai-input flex-1"
+          placeholder={placeholder}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+        />
+        {SpeechRecognitionCtor && (
+          <button
+            type="button"
+            className="plai-btn"
+            onClick={toggleDictation}
+            aria-pressed={listening}
+          >
+            {listening ? 'Arrêter' : 'Dicter 🎤'}
+          </button>
+        )}
+        <button type="button" className="plai-btn" onClick={handleAdd} disabled={!text.trim()}>
+          Ajouter
         </button>
-      )}
-      <button type="button" className="plai-btn" onClick={handleAdd} disabled={!text.trim()}>
-        Ajouter
-      </button>
+      </div>
+      <p className="plai-help">Décrivez une seule action à la fois, simplement.</p>
     </div>
   )
 }

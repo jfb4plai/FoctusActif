@@ -18,6 +18,7 @@ describe('App — parcours élève autonome', () => {
 
     // Capturer une tâche depuis l'état vide
     await userEvent.click(screen.getByRole('button', { name: /ajouter une tâche/i }))
+    expect(screen.getByText(/ajouter une tâche.*Devoirs/i)).toBeInTheDocument()
     await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Faire l\'exposé')
     await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
 
@@ -55,5 +56,20 @@ describe('App — parcours élève autonome', () => {
 
     expect(await screen.findByLabelText(/nom du contexte/i)).toBeInTheDocument()
     expect(screen.getByText('Retour contexte test')).toBeInTheDocument()
+  })
+
+  it('permet d\'annuler l\'ajout d\'une tâche sans la valider', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Annulation test')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Annulation test'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.click(screen.getByRole('button', { name: /annuler/i }))
+
+    await waitFor(() => expect(screen.getByText(/ajouter une tâche/i)).toBeInTheDocument())
+    expect(screen.queryByPlaceholderText(/ex :/i)).not.toBeInTheDocument()
   })
 })

@@ -15,6 +15,12 @@ describe('QuickCapture', () => {
     expect(screen.getByRole('button', { name: /ajouter/i })).toBeDisabled()
   })
 
+  it('affiche un label et une aide explicite pour le champ de saisie', () => {
+    render(<QuickCapture onAdd={vi.fn()} />)
+    expect(screen.getByLabelText(/titre de la tâche/i)).toBeInTheDocument()
+    expect(screen.getByText(/une seule action à la fois/i)).toBeInTheDocument()
+  })
+
   it('déclenche onAdd avec le texte saisi puis vide le champ', async () => {
     const onAdd = vi.fn()
     render(<QuickCapture onAdd={onAdd} />)

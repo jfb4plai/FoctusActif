@@ -90,6 +90,7 @@ export function Auth({ onSignIn, onSignUp }) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          <p className="plai-help">Vous en aurez besoin pour vous reconnecter la prochaine fois.</p>
         </div>
 
         <button type="submit" className="plai-btn">

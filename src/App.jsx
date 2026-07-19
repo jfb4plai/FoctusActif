@@ -103,6 +103,8 @@ function AppInner() {
     )
   }
 
+  const activeContext = contexts.find((c) => c.id === activeContextId)
+
   if (decomposing) {
     // `currentTask` is the task that was on screen when "Décomposer" was clicked
     // (the parent being decomposed) and is not refreshed while this sheet is open,
@@ -120,12 +122,18 @@ function AppInner() {
   if (capturing) {
     return (
       <div className="plai-section">
+        <div className="flex justify-between items-center mb-4">
+          <h2>
+            Ajouter une tâche — {activeContext?.emoji} {activeContext?.label}
+          </h2>
+          <button type="button" className="plai-btn-ghost" onClick={() => setCapturing(false)}>
+            Annuler
+          </button>
+        </div>
         <QuickCapture onAdd={handleAddRootTask} />
       </div>
     )
   }
-
-  const activeContext = contexts.find((c) => c.id === activeContextId)
 
   return (
     <>
@@ -143,6 +151,8 @@ function AppInner() {
       )}
       <TaskDashboard
         task={currentTask}
+        contextLabel={activeContext?.label}
+        contextEmoji={activeContext?.emoji}
         contextLocked={Boolean(activeContext?.locked)}
         onComplete={handleComplete}
         onDecompose={setDecomposing}

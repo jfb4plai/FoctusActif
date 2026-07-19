@@ -26,6 +26,11 @@ describe('Auth', () => {
     expect(await screen.findByText(/identifiants incorrects/i)).toBeInTheDocument()
   })
 
+  it('explique à quoi sert le mot de passe', () => {
+    render(<Auth onSignIn={vi.fn()} onSignUp={vi.fn()} />)
+    expect(screen.getByText(/vous en aurez besoin pour vous reconnecter/i)).toBeInTheDocument()
+  })
+
   it('bascule vers le formulaire d\'inscription et déclenche onSignUp', async () => {
     const onSignUp = vi.fn().mockResolvedValue(undefined)
     render(<Auth onSignIn={vi.fn()} onSignUp={onSignUp} />)

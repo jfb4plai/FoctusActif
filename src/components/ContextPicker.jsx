@@ -21,6 +21,10 @@ export function ContextPicker({ contexts, onSelect, onCreate }) {
         <p className="plai-empty">Aucun contexte pour l'instant. Créez-en un pour commencer.</p>
       )}
 
+      {contexts.length > 0 && (
+        <p className="plai-help mb-3">Touchez un contexte pour l'ouvrir et voir ses tâches.</p>
+      )}
+
       <div className="grid grid-cols-2 gap-3 mb-6">
         {contexts.map((context) => (
           <button

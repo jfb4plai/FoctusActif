@@ -20,6 +20,11 @@ describe('ContextPicker', () => {
     expect(onSelect).toHaveBeenCalledWith('c1')
   })
 
+  it('explique que les contextes existants sont cliquables pour les ouvrir', () => {
+    render(<ContextPicker contexts={CONTEXTS} onSelect={vi.fn()} onCreate={vi.fn()} />)
+    expect(screen.getByText(/touchez un contexte pour l'ouvrir/i)).toBeInTheDocument()
+  })
+
   it('affiche un état vide invitant à créer un contexte si la liste est vide', () => {
     render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
     expect(screen.getByText(/aucun contexte/i)).toBeInTheDocument()
