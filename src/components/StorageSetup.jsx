@@ -9,8 +9,8 @@ export function StorageSetup({ onChooseLocal, onChooseAccount }) {
           appareil.
         </p>
         <p className="plai-help mb-3">
-          Limite à connaître : dans ce mode, un enseignant ne peut pas configurer ou verrouiller
-          de contexte à distance, puisque rien n'est envoyé sur un serveur.
+          Limite à connaître : rien n'est sauvegardé en ligne. Si l'appareil est perdu ou
+          réinitialisé, vos contextes et tâches sont perdus aussi.
         </p>
         <button type="button" className="plai-btn" onClick={onChooseLocal}>
           Continuer sans compte
@@ -19,8 +19,8 @@ export function StorageSetup({ onChooseLocal, onChooseAccount }) {
 
       <div className="plai-card">
         <p className="mb-3">
-          <strong>Avec un compte</strong> — vos données sont synchronisées, et un enseignant lié
-          peut configurer certains contextes pour vous.
+          <strong>Avec un compte</strong> — vos contextes et tâches sont sauvegardés en ligne,
+          accessibles depuis n'importe quel appareil.
         </p>
         <button type="button" className="plai-btn" onClick={onChooseAccount}>
           Créer un compte / Se connecter

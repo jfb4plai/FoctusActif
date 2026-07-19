@@ -18,8 +18,13 @@ describe('StorageSetup', () => {
     expect(onChooseAccount).toHaveBeenCalled()
   })
 
-  it('affiche la limite du mode local (pas de configuration enseignant à distance)', () => {
+  it('affiche la limite du mode local (rien n\'est sauvegardé en ligne)', () => {
     render(<StorageSetup onChooseLocal={vi.fn()} onChooseAccount={vi.fn()} />)
-    expect(screen.getByText(/enseignant.*à distance/i)).toBeInTheDocument()
+    expect(screen.getByText(/rien n'est sauvegardé en ligne/i)).toBeInTheDocument()
+  })
+
+  it('ne promet pas la liaison enseignant en mode compte (fonctionnalité non disponible)', () => {
+    render(<StorageSetup onChooseLocal={vi.fn()} onChooseAccount={vi.fn()} />)
+    expect(screen.queryByText(/enseignant lié peut configurer/i)).not.toBeInTheDocument()
   })
 })
