@@ -6,6 +6,7 @@ import { ContextPicker } from './components/ContextPicker.jsx'
 import { TaskDashboard } from './components/TaskDashboard.jsx'
 import { QuickCapture } from './components/QuickCapture.jsx'
 import { DecomposeSheet } from './components/DecomposeSheet.jsx'
+import { useReminderWatcher } from './lib/useReminderWatcher.js'
 
 function AppInner() {
   const store = useTaskStore()
@@ -56,6 +57,8 @@ function AppInner() {
     loadSubtasks()
   }, [store, decomposing])
 
+  const reminderDue = useReminderWatcher(store, currentTask)
+
   if (!store) return null
 
   async function handleCreateContext(label, emoji) {
@@ -71,6 +74,16 @@ function AppInner() {
 
   async function handleComplete(taskId) {
     await store.completeTask(taskId)
+    await refreshCurrentTask()
+  }
+
+  async function handleSetReminder(taskId, remindAtIso) {
+    await store.setReminder(taskId, remindAtIso)
+    await refreshCurrentTask()
+  }
+
+  async function handleClearReminder(taskId) {
+    await store.clearReminder(taskId)
     await refreshCurrentTask()
   }
 
@@ -115,13 +128,22 @@ function AppInner() {
   const activeContext = contexts.find((c) => c.id === activeContextId)
 
   return (
-    <TaskDashboard
-      task={currentTask}
-      contextLocked={Boolean(activeContext?.locked)}
-      onComplete={handleComplete}
-      onDecompose={setDecomposing}
-      onOpenCapture={() => setCapturing(true)}
-    />
+    <>
+      {reminderDue && (
+        <p className="plai-success" role="status">
+          Rappel : c'est le moment pour « {currentTask?.title} ».
+        </p>
+      )}
+      <TaskDashboard
+        task={currentTask}
+        contextLocked={Boolean(activeContext?.locked)}
+        onComplete={handleComplete}
+        onDecompose={setDecomposing}
+        onOpenCapture={() => setCapturing(true)}
+        onSetReminder={handleSetReminder}
+        onClearReminder={handleClearReminder}
+      />
+    </>
   )
 }
 
