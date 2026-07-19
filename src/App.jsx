@@ -8,7 +8,7 @@ import { QuickCapture } from './components/QuickCapture.jsx'
 import { DecomposeSheet } from './components/DecomposeSheet.jsx'
 import { useReminderWatcher } from './lib/useReminderWatcher.js'
 
-function AppInner() {
+function AppInner({ storageMode }) {
   const store = useTaskStore()
   const [contexts, setContexts] = useState([])
   const [activeContextId, setActiveContextId] = useState(null)
@@ -20,6 +20,13 @@ function AppInner() {
   const [onboardingDone, setOnboardingDone] = useState(
     () => localStorage.getItem('focusactif_onboarding_done') === '1',
   )
+  const [pushPromptDismissed, setPushPromptDismissed] = useState(false)
+
+  const showPushPrompt =
+    storageMode === 'account' &&
+    typeof Notification !== 'undefined' &&
+    Notification.permission === 'default' &&
+    !pushPromptDismissed
 
   const refreshContexts = useCallback(async () => {
     if (!store) return
@@ -135,16 +142,50 @@ function AppInner() {
     refreshCurrentTask()
   }
 
+  async function handleEnablePush() {
+    const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+    if (vapidKey) {
+      const { supabase } = await import('./lib/supabaseClient.js')
+      const { subscribeToPush } = await import('./lib/pushSubscription.js')
+      await subscribeToPush(supabase, vapidKey)
+    }
+    setPushPromptDismissed(true)
+  }
+
+  const pushPrompt = showPushPrompt && (
+    <div className="plai-card mb-4">
+      <p className="mb-2">
+        FocusActif peut vous envoyer un vrai rappel même quand l'application est fermée. Le
+        navigateur va vous demander une autorisation.
+      </p>
+      <div className="flex gap-2">
+        <button type="button" className="plai-btn" onClick={handleEnablePush}>
+          Activer les notifications
+        </button>
+        <button
+          type="button"
+          className="plai-btn-ghost"
+          onClick={() => setPushPromptDismissed(true)}
+        >
+          Plus tard
+        </button>
+      </div>
+    </div>
+  )
+
   if (!activeContextId) {
     return (
-      <ContextPicker
-        contexts={contexts}
-        onSelect={setActiveContextId}
-        onCreate={handleCreateContext}
-        onRename={handleRenameContext}
-        onDelete={handleDeleteContext}
-        showOnboarding={!onboardingDone}
-      />
+      <>
+        {pushPrompt}
+        <ContextPicker
+          contexts={contexts}
+          onSelect={setActiveContextId}
+          onCreate={handleCreateContext}
+          onRename={handleRenameContext}
+          onDelete={handleDeleteContext}
+          showOnboarding={!onboardingDone}
+        />
+      </>
     )
   }
 
@@ -237,21 +278,12 @@ function App() {
     if (storageMode !== 'account' || !authed) return
     if (!('serviceWorker' in navigator)) return
 
-    let cancelled = false
-
-    async function register() {
-      await navigator.serviceWorker.register('/sw.js')
-      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
-      if (!vapidKey || cancelled) return
-      const { supabase } = await import('./lib/supabaseClient.js')
-      const { subscribeToPush } = await import('./lib/pushSubscription.js')
-      await subscribeToPush(supabase, vapidKey)
-    }
-
-    register()
-    return () => {
-      cancelled = true
-    }
+    // Enregistrement silencieux : ne déclenche aucune demande de permission.
+    // L'activation des notifications elle-même passe par un clic explicite
+    // de l'utilisateur (bannière "Activer les notifications" dans AppInner),
+    // jamais automatiquement — un popup de permission surprise est
+    // déroutant, en particulier pour un public TDAH/TSA.
+    navigator.serviceWorker.register('/sw.js')
   }, [storageMode, authed])
 
   if (!storageMode) {
@@ -295,7 +327,7 @@ function App() {
 
   return (
     <StoreProvider storageMode={storageMode}>
-      <AppInner />
+      <AppInner storageMode={storageMode} />
     </StoreProvider>
   )
 }
