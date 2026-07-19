@@ -1,0 +1,15 @@
+{
+  "name": "FocusActif",
+  "short_name": "FocusActif",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f7",
+  "theme_color": "#0f6e56",
+  "icons": [
+    {
+      "src": "/plai-logo.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}

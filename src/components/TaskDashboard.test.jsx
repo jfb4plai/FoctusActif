@@ -61,4 +61,19 @@ describe('TaskDashboard', () => {
     expect(screen.queryByRole('button', { name: /ajouter une tâche/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /fait/i })).toBeInTheDocument()
   })
+
+  it('affiche le ReminderPicker et relaie ses callbacks', () => {
+    const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null, remindAt: null }
+    render(
+      <TaskDashboard
+        task={task}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        onSetReminder={vi.fn()}
+        onClearReminder={vi.fn()}
+      />,
+    )
+    expect(screen.getByLabelText(/me le rappeler à/i)).toBeInTheDocument()
+  })
 })

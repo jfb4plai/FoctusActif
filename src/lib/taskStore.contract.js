@@ -121,5 +121,43 @@ export function runTaskStoreContractTests(createStore) {
       const next = await store.getNextTask(context.id)
       expect(next.id).toBe(rootA.id)
     })
+
+    it('setReminder définit remindAt sur la tâche, clearReminder l\'efface', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+      const task = await store.addTask(context.id, 'Réviser')
+      const remindAt = new Date(Date.now() + 3600000).toISOString()
+
+      await store.setReminder(task.id, remindAt)
+      let next = await store.getNextTask(context.id)
+      expect(next.remindAt).toBe(remindAt)
+      expect(next.reminderSent).toBe(false)
+
+      await store.clearReminder(task.id)
+      next = await store.getNextTask(context.id)
+      expect(next.remindAt).toBeNull()
+    })
+
+    it('markReminderSent marque le rappel comme envoyé sans changer remindAt', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+      const task = await store.addTask(context.id, 'Réviser')
+      const remindAt = new Date(Date.now() + 3600000).toISOString()
+      await store.setReminder(task.id, remindAt)
+
+      await store.markReminderSent(task.id)
+
+      const next = await store.getNextTask(context.id)
+      expect(next.remindAt).toBe(remindAt)
+      expect(next.reminderSent).toBe(true)
+    })
+
+    it('une tâche sans rappel a remindAt null et reminderSent false par défaut', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const task = await store.addTask(context.id, 'Ranger sa chambre')
+      expect(task.remindAt).toBeNull()
+      expect(task.reminderSent).toBe(false)
+    })
   })
 }

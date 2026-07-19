@@ -6,6 +6,7 @@ import { ContextPicker } from './components/ContextPicker.jsx'
 import { TaskDashboard } from './components/TaskDashboard.jsx'
 import { QuickCapture } from './components/QuickCapture.jsx'
 import { DecomposeSheet } from './components/DecomposeSheet.jsx'
+import { useReminderWatcher } from './lib/useReminderWatcher.js'
 
 function AppInner() {
   const store = useTaskStore()
@@ -56,6 +57,8 @@ function AppInner() {
     loadSubtasks()
   }, [store, decomposing])
 
+  const reminderDue = useReminderWatcher(store, currentTask)
+
   if (!store) return null
 
   async function handleCreateContext(label, emoji) {
@@ -71,6 +74,16 @@ function AppInner() {
 
   async function handleComplete(taskId) {
     await store.completeTask(taskId)
+    await refreshCurrentTask()
+  }
+
+  async function handleSetReminder(taskId, remindAtIso) {
+    await store.setReminder(taskId, remindAtIso)
+    await refreshCurrentTask()
+  }
+
+  async function handleClearReminder(taskId) {
+    await store.clearReminder(taskId)
     await refreshCurrentTask()
   }
 
@@ -115,19 +128,49 @@ function AppInner() {
   const activeContext = contexts.find((c) => c.id === activeContextId)
 
   return (
-    <TaskDashboard
-      task={currentTask}
-      contextLocked={Boolean(activeContext?.locked)}
-      onComplete={handleComplete}
-      onDecompose={setDecomposing}
-      onOpenCapture={() => setCapturing(true)}
-    />
+    <>
+      {reminderDue && (
+        <p className="plai-success" role="status">
+          Rappel : c'est le moment pour « {currentTask?.title} ».
+        </p>
+      )}
+      <TaskDashboard
+        task={currentTask}
+        contextLocked={Boolean(activeContext?.locked)}
+        onComplete={handleComplete}
+        onDecompose={setDecomposing}
+        onOpenCapture={() => setCapturing(true)}
+        onSetReminder={handleSetReminder}
+        onClearReminder={handleClearReminder}
+      />
+    </>
   )
 }
 
 function App() {
   const [storageMode, setStorageMode] = useState(null)
   const [authed, setAuthed] = useState(false)
+
+  useEffect(() => {
+    if (storageMode !== 'account' || !authed) return
+    if (!('serviceWorker' in navigator)) return
+
+    let cancelled = false
+
+    async function register() {
+      await navigator.serviceWorker.register('/sw.js')
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      if (!vapidKey || cancelled) return
+      const { supabase } = await import('./lib/supabaseClient.js')
+      const { subscribeToPush } = await import('./lib/pushSubscription.js')
+      await subscribeToPush(supabase, vapidKey)
+    }
+
+    register()
+    return () => {
+      cancelled = true
+    }
+  }, [storageMode, authed])
 
   if (!storageMode) {
     return (
@@ -154,6 +197,13 @@ function App() {
           if (data.session) {
             setAuthed(true)
             return { needsConfirmation: false }
+          }
+          // Supabase renvoie toujours une réponse "compte créé" pour ne pas révéler
+          // si l'e-mail existe déjà (anti-énumération) — mais un tableau `identities`
+          // vide est le signal documenté d'un compte déjà existant et confirmé,
+          // pour lequel aucun e-mail n'est réellement envoyé.
+          if (data.user?.identities?.length === 0) {
+            return { alreadyExists: true }
           }
           return { needsConfirmation: true }
         }}

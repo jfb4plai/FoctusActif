@@ -48,7 +48,7 @@ export function createSupabaseStore(supabase) {
         .select('id, context_id, title, status, parent_task_id, step_order, created_at, done_at')
         .single()
       if (error) throw error
-      return toTask(data)
+      return { ...toTask(data), remindAt: null, reminderSent: false }
     },
 
     async listSubtasks(parentTaskId) {
@@ -58,7 +58,7 @@ export function createSupabaseStore(supabase) {
         .eq('parent_task_id', parentTaskId)
         .order('step_order', { ascending: true })
       if (error) throw error
-      return data.map(toTask)
+      return attachReminders(supabase, data.map(toTask))
     },
 
     async getNextTask(contextId) {
@@ -68,7 +68,9 @@ export function createSupabaseStore(supabase) {
         if (root.status === 'done') continue
 
         const subtasks = (await this.listSubtasks(root.id)).filter((t) => t.status === 'todo')
-        return subtasks.length > 0 ? subtasks[0] : root
+        const result = subtasks.length > 0 ? subtasks[0] : root
+        const [withReminder] = await attachReminders(supabase, [result])
+        return withReminder
       }
 
       return null
@@ -79,6 +81,27 @@ export function createSupabaseStore(supabase) {
         .from('focus_tasks')
         .update({ status: 'done', done_at: new Date().toISOString() })
         .eq('id', taskId)
+      if (error) throw error
+    },
+
+    async setReminder(taskId, remindAtIso) {
+      const ownerId = await requireUserId()
+      const { error } = await supabase
+        .from('focus_reminders')
+        .upsert(
+          { task_id: taskId, owner_id: ownerId, remind_at: remindAtIso, sent: false },
+          { onConflict: 'task_id' },
+        )
+      if (error) throw error
+    },
+
+    async clearReminder(taskId) {
+      const { error } = await supabase.from('focus_reminders').delete().eq('task_id', taskId)
+      if (error) throw error
+    },
+
+    async markReminderSent(taskId) {
+      const { error } = await supabase.from('focus_reminders').update({ sent: true }).eq('task_id', taskId)
       if (error) throw error
     },
   }
@@ -92,7 +115,23 @@ async function listRootTasks(supabase, contextId) {
     .is('parent_task_id', null)
     .order('step_order', { ascending: true })
   if (error) throw error
-  return data.map(toTask)
+  return attachReminders(supabase, data.map(toTask))
+}
+
+async function attachReminders(supabase, tasks) {
+  if (tasks.length === 0) return tasks
+  const taskIds = tasks.map((t) => t.id)
+  const { data, error } = await supabase
+    .from('focus_reminders')
+    .select('task_id, remind_at, sent')
+    .in('task_id', taskIds)
+  if (error) throw error
+  const byTaskId = Object.fromEntries(data.map((r) => [r.task_id, r]))
+  return tasks.map((t) => ({
+    ...t,
+    remindAt: byTaskId[t.id]?.remind_at ?? null,
+    reminderSent: byTaskId[t.id]?.sent ?? false,
+  }))
 }
 
 function toTask(row) {

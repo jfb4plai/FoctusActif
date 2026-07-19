@@ -60,6 +60,8 @@ export async function createLocalStore(dbName = 'focusactif') {
         stepOrder,
         createdAt: new Date().toISOString(),
         doneAt: null,
+        remindAt: null,
+        reminderSent: false,
       }
       await put(db, 'tasks', task)
       return task
@@ -94,6 +96,24 @@ export async function createLocalStore(dbName = 'focusactif') {
       const task = await get(db, 'tasks', taskId)
       if (!task) return
       await put(db, 'tasks', { ...task, status: 'done', doneAt: new Date().toISOString() })
+    },
+
+    async setReminder(taskId, remindAtIso) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, remindAt: remindAtIso, reminderSent: false })
+    },
+
+    async clearReminder(taskId) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, remindAt: null, reminderSent: false })
+    },
+
+    async markReminderSent(taskId) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, reminderSent: true })
     },
   }
 }
