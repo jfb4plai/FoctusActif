@@ -36,6 +36,7 @@ describe('TaskDashboard', () => {
     )
     expect(screen.getByText(/marque cette tâche comme terminée/i)).toBeInTheDocument()
     expect(screen.getByText(/la diviser en plusieurs petites étapes/i)).toBeInTheDocument()
+    expect(screen.getByText(/faire l'exposé.*choisir le sujet/i)).toBeInTheDocument()
   })
 
   it('rappelle le contexte actif (emoji + nom), avec ou sans tâche', () => {
@@ -97,6 +98,69 @@ describe('TaskDashboard', () => {
     expect(screen.queryByRole('button', { name: /décomposer/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /ajouter une tâche/i })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: /fait/i })).toBeInTheDocument()
+  })
+
+  it('masque aussi le renommer/supprimer si le contexte est verrouillé', () => {
+    const task = { id: 't1', title: 'Choisir le sujet', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard
+        task={task}
+        contextLocked
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        onRenameTask={vi.fn()}
+        onDeleteTask={vi.fn()}
+      />,
+    )
+    expect(screen.queryByRole('button', { name: /modifier/i })).not.toBeInTheDocument()
+  })
+
+  it('permet de renommer la tâche courante', async () => {
+    const onRenameTask = vi.fn()
+    const task = { id: 't1', title: 'Reviser', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard
+        task={task}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        onRenameTask={onRenameTask}
+        onDeleteTask={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    const input = screen.getByDisplayValue('Reviser')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Réviser')
+    await userEvent.click(screen.getByRole('button', { name: /enregistrer/i }))
+
+    expect(onRenameTask).toHaveBeenCalledWith('t1', 'Réviser')
+  })
+
+  it('demande confirmation avant de supprimer la tâche courante', async () => {
+    const onDeleteTask = vi.fn()
+    const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard
+        task={task}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        onRenameTask={vi.fn()}
+        onDeleteTask={onDeleteTask}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^supprimer$/i }))
+
+    expect(screen.getByText(/supprimer .*réviser/i)).toBeInTheDocument()
+    expect(onDeleteTask).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: /oui, supprimer/i }))
+    expect(onDeleteTask).toHaveBeenCalledWith('t1')
   })
 
   it('affiche le ReminderPicker et relaie ses callbacks', () => {

@@ -1,4 +1,4 @@
-import { openDb, put, getAll, get } from './idbHelpers.js'
+import { openDb, put, getAll, get, remove } from './idbHelpers.js'
 
 const DB_VERSION = 1
 
@@ -114,6 +114,37 @@ export async function createLocalStore(dbName = 'focusactif') {
       const task = await get(db, 'tasks', taskId)
       if (!task) return
       await put(db, 'tasks', { ...task, reminderSent: true })
+    },
+
+    async renameContext(contextId, newLabel) {
+      const context = await get(db, 'contexts', contextId)
+      if (!context) return
+      await put(db, 'contexts', { ...context, label: newLabel })
+    },
+
+    async deleteContext(contextId) {
+      const all = await getAll(db, 'tasks')
+      const tasksToDelete = all.filter((t) => t.contextId === contextId)
+      await Promise.all(tasksToDelete.map((t) => remove(db, 'tasks', t.id)))
+      await remove(db, 'contexts', contextId)
+    },
+
+    async renameTask(taskId, newTitle) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, title: newTitle })
+    },
+
+    async deleteTask(taskId) {
+      const subtasks = await listSubtasksOf(db, taskId)
+      await Promise.all(subtasks.map((t) => remove(db, 'tasks', t.id)))
+      await remove(db, 'tasks', taskId)
+    },
+
+    async uncompleteTask(taskId) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, status: 'todo', doneAt: null })
     },
   }
 }

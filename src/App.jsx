@@ -16,6 +16,7 @@ function AppInner() {
   const [capturing, setCapturing] = useState(false)
   const [decomposing, setDecomposing] = useState(null)
   const [subtasks, setSubtasks] = useState([])
+  const [justCompleted, setJustCompleted] = useState(null)
 
   const refreshContexts = useCallback(async () => {
     if (!store) return
@@ -66,6 +67,16 @@ function AppInner() {
     await refreshContexts()
   }
 
+  async function handleRenameContext(contextId, newLabel) {
+    await store.renameContext(contextId, newLabel)
+    await refreshContexts()
+  }
+
+  async function handleDeleteContext(contextId) {
+    await store.deleteContext(contextId)
+    await refreshContexts()
+  }
+
   async function handleAddRootTask(title) {
     await store.addTask(activeContextId, title)
     setCapturing(false)
@@ -73,7 +84,27 @@ function AppInner() {
   }
 
   async function handleComplete(taskId) {
+    const title = currentTask?.title ?? ''
     await store.completeTask(taskId)
+    await refreshCurrentTask()
+    setJustCompleted({ id: taskId, title })
+  }
+
+  async function handleUndoComplete() {
+    if (!justCompleted) return
+    await store.uncompleteTask(justCompleted.id)
+    await refreshCurrentTask()
+    setJustCompleted(null)
+  }
+
+  async function handleRenameTask(taskId, newTitle) {
+    await store.renameTask(taskId, newTitle)
+    await refreshCurrentTask()
+  }
+
+  async function handleDeleteTask(taskId) {
+    await store.deleteTask(taskId)
+    setJustCompleted(null)
     await refreshCurrentTask()
   }
 
@@ -99,7 +130,13 @@ function AppInner() {
 
   if (!activeContextId) {
     return (
-      <ContextPicker contexts={contexts} onSelect={setActiveContextId} onCreate={handleCreateContext} />
+      <ContextPicker
+        contexts={contexts}
+        onSelect={setActiveContextId}
+        onCreate={handleCreateContext}
+        onRename={handleRenameContext}
+        onDelete={handleDeleteContext}
+      />
     )
   }
 
@@ -140,10 +177,21 @@ function AppInner() {
       <button
         type="button"
         className="plai-btn-ghost mb-3"
-        onClick={() => setActiveContextId(null)}
+        onClick={() => {
+          setActiveContextId(null)
+          setJustCompleted(null)
+        }}
       >
         ← Mes contextes
       </button>
+      {justCompleted && (
+        <p className="plai-success flex items-center justify-between gap-3" role="status">
+          <span>« {justCompleted.title} » marqué comme fait.</span>
+          <button type="button" className="plai-btn-ghost" onClick={handleUndoComplete}>
+            ↩ Annuler
+          </button>
+        </p>
+      )}
       {reminderDue && (
         <p className="plai-success" role="status">
           Rappel : c'est le moment pour « {currentTask?.title} ».
@@ -155,10 +203,18 @@ function AppInner() {
         contextEmoji={activeContext?.emoji}
         contextLocked={Boolean(activeContext?.locked)}
         onComplete={handleComplete}
-        onDecompose={setDecomposing}
-        onOpenCapture={() => setCapturing(true)}
+        onDecompose={(taskId) => {
+          setDecomposing(taskId)
+          setJustCompleted(null)
+        }}
+        onOpenCapture={() => {
+          setCapturing(true)
+          setJustCompleted(null)
+        }}
         onSetReminder={handleSetReminder}
         onClearReminder={handleClearReminder}
+        onRenameTask={handleRenameTask}
+        onDeleteTask={handleDeleteTask}
       />
     </>
   )

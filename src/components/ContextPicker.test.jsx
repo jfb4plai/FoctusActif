@@ -39,4 +39,54 @@ describe('ContextPicker', () => {
 
     expect(onCreate).toHaveBeenCalledWith('Devoirs', expect.any(String))
   })
+
+  it('ne montre pas de bouton "Gérer" si la liste est vide', () => {
+    render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
+    expect(screen.queryByRole('button', { name: /gérer/i })).not.toBeInTheDocument()
+  })
+
+  it('permet de renommer un contexte en mode gestion', async () => {
+    const onRename = vi.fn()
+    render(
+      <ContextPicker
+        contexts={CONTEXTS}
+        onSelect={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={onRename}
+        onDelete={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /gérer mes contextes/i }))
+    await userEvent.click(screen.getAllByRole('button', { name: /renommer/i })[0])
+
+    const input = screen.getByDisplayValue('École')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'École primaire')
+    await userEvent.click(screen.getByRole('button', { name: /enregistrer/i }))
+
+    expect(onRename).toHaveBeenCalledWith('c1', 'École primaire')
+  })
+
+  it('demande une confirmation explicite avant de supprimer un contexte', async () => {
+    const onDelete = vi.fn()
+    render(
+      <ContextPicker
+        contexts={CONTEXTS}
+        onSelect={vi.fn()}
+        onCreate={vi.fn()}
+        onRename={vi.fn()}
+        onDelete={onDelete}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /gérer mes contextes/i }))
+    await userEvent.click(screen.getAllByRole('button', { name: /^supprimer$/i })[0])
+
+    expect(screen.getByText(/supprimer .*école.* et toutes ses tâches/i)).toBeInTheDocument()
+    expect(onDelete).not.toHaveBeenCalled()
+
+    await userEvent.click(screen.getByRole('button', { name: /oui, supprimer/i }))
+    expect(onDelete).toHaveBeenCalledWith('c1')
+  })
 })

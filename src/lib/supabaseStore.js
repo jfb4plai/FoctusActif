@@ -104,6 +104,34 @@ export function createSupabaseStore(supabase) {
       const { error } = await supabase.from('focus_reminders').update({ sent: true }).eq('task_id', taskId)
       if (error) throw error
     },
+
+    async renameContext(contextId, newLabel) {
+      const { error } = await supabase.from('focus_contexts').update({ label: newLabel }).eq('id', contextId)
+      if (error) throw error
+    },
+
+    async deleteContext(contextId) {
+      const { error } = await supabase.from('focus_contexts').delete().eq('id', contextId)
+      if (error) throw error
+    },
+
+    async renameTask(taskId, newTitle) {
+      const { error } = await supabase.from('focus_tasks').update({ title: newTitle }).eq('id', taskId)
+      if (error) throw error
+    },
+
+    async deleteTask(taskId) {
+      const { error } = await supabase.from('focus_tasks').delete().eq('id', taskId)
+      if (error) throw error
+    },
+
+    async uncompleteTask(taskId) {
+      const { error } = await supabase
+        .from('focus_tasks')
+        .update({ status: 'todo', done_at: null })
+        .eq('id', taskId)
+      if (error) throw error
+    },
   }
 }
 

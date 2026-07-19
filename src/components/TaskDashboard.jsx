@@ -1,4 +1,62 @@
+import { useId, useState } from 'react'
 import { ReminderPicker } from './ReminderPicker.jsx'
+
+function EditTask({ task, onRenameTask, onDeleteTask, onDone }) {
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [draft, setDraft] = useState(task.title)
+  const inputId = useId()
+
+  function handleSave() {
+    const trimmed = draft.trim()
+    if (trimmed) onRenameTask(task.id, trimmed)
+    onDone()
+  }
+
+  if (confirmingDelete) {
+    return (
+      <div className="plai-card mb-4">
+        <p className="plai-error mb-3">
+          Supprimer « {task.title} » ? Cette action est définitive.
+        </p>
+        <div className="flex justify-center gap-2">
+          <button type="button" className="plai-btn" onClick={() => onDeleteTask(task.id)}>
+            Oui, supprimer
+          </button>
+          <button type="button" className="plai-btn-ghost" onClick={() => setConfirmingDelete(false)}>
+            Annuler
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="plai-card mb-4">
+      <div className="plai-field">
+        <label htmlFor={inputId} className="plai-label">
+          Nouveau titre
+        </label>
+        <input
+          id={inputId}
+          className="plai-input w-full"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+        />
+      </div>
+      <div className="flex justify-center gap-2 mt-2">
+        <button type="button" className="plai-btn" onClick={handleSave}>
+          Enregistrer
+        </button>
+        <button type="button" className="plai-btn-ghost" onClick={() => setConfirmingDelete(true)}>
+          Supprimer
+        </button>
+        <button type="button" className="plai-btn-ghost" onClick={onDone}>
+          Annuler
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export function TaskDashboard({
   task,
@@ -10,7 +68,11 @@ export function TaskDashboard({
   onOpenCapture,
   onSetReminder,
   onClearReminder,
+  onRenameTask,
+  onDeleteTask,
 }) {
+  const [editingTask, setEditingTask] = useState(false)
+
   const contextReminder = contextLabel && (
     <p className="plai-help mb-4">
       Contexte actuel : {contextEmoji} {contextLabel}
@@ -35,6 +97,20 @@ export function TaskDashboard({
     )
   }
 
+  if (editingTask) {
+    return (
+      <div className="plai-section">
+        {contextReminder}
+        <EditTask
+          task={task}
+          onRenameTask={onRenameTask}
+          onDeleteTask={onDeleteTask}
+          onDone={() => setEditingTask(false)}
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="plai-section">
       {contextReminder}
@@ -53,8 +129,17 @@ export function TaskDashboard({
         <p className="plai-help mt-4">
           « Fait » marque cette tâche comme terminée.
           {!contextLocked && !task.parentTaskId &&
-            ' « Décomposer » permet de la diviser en plusieurs petites étapes à faire une par une.'}
+            ' « Décomposer » permet de la diviser en plusieurs petites étapes à faire une par une, par exemple « Faire l\'exposé » → « Choisir le sujet », « Chercher des infos », « Rédiger ».'}
         </p>
+        {!contextLocked && (
+          <button
+            type="button"
+            className="plai-btn-ghost mt-4"
+            onClick={() => setEditingTask(true)}
+          >
+            Modifier cette tâche
+          </button>
+        )}
       </div>
 
       <ReminderPicker

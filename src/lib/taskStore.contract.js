@@ -159,5 +159,62 @@ export function runTaskStoreContractTests(createStore) {
       expect(task.remindAt).toBeNull()
       expect(task.reminderSent).toBe(false)
     })
+
+    it('renameContext change le libellé', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+      await store.renameContext(context.id, 'Devoirs du soir')
+
+      const contexts = await store.listContexts()
+      expect(contexts[0].label).toBe('Devoirs du soir')
+    })
+
+    it('deleteContext retire le contexte et ses tâches', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+      await store.addTask(context.id, 'Réviser')
+
+      await store.deleteContext(context.id)
+
+      expect(await store.listContexts()).toEqual([])
+      expect(await store.getNextTask(context.id)).toBeNull()
+    })
+
+    it('renameTask change le titre', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Devoirs', '📚')
+      const task = await store.addTask(context.id, 'Reviser')
+      await store.renameTask(task.id, 'Réviser')
+
+      const next = await store.getNextTask(context.id)
+      expect(next.title).toBe('Réviser')
+    })
+
+    it('deleteTask retire la tâche, la suivante devient la tâche courante', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const first = await store.addTask(context.id, 'Première tâche')
+      const second = await store.addTask(context.id, 'Deuxième tâche')
+
+      await store.deleteTask(first.id)
+
+      const next = await store.getNextTask(context.id)
+      expect(next.id).toBe(second.id)
+    })
+
+    it('uncompleteTask remet une tâche terminée en todo', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const task = await store.addTask(context.id, 'Ranger sa chambre')
+      await store.completeTask(task.id)
+      expect(await store.getNextTask(context.id)).toBeNull()
+
+      await store.uncompleteTask(task.id)
+
+      const next = await store.getNextTask(context.id)
+      expect(next.id).toBe(task.id)
+      expect(next.status).toBe('todo')
+      expect(next.doneAt).toBeNull()
+    })
   })
 }

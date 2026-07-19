@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect } from 'vitest'
 import App from './App.jsx'
@@ -71,5 +71,79 @@ describe('App — parcours élève autonome', () => {
 
     await waitFor(() => expect(screen.getByText(/ajouter une tâche/i)).toBeInTheDocument())
     expect(screen.queryByPlaceholderText(/ex :/i)).not.toBeInTheDocument()
+  })
+
+  it('permet de renommer puis de supprimer un contexte', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte à renommer')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+
+    await userEvent.click(await screen.findByRole('button', { name: /gérer mes contextes/i }))
+    const row = screen.getByText('Contexte à renommer').closest('.plai-card')
+    await userEvent.click(within(row).getByRole('button', { name: /renommer/i }))
+    const input = screen.getByDisplayValue('Contexte à renommer')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Contexte renommé')
+    await userEvent.click(screen.getByRole('button', { name: /enregistrer/i }))
+
+    expect(await screen.findByText('Contexte renommé')).toBeInTheDocument()
+
+    const renamedRow = screen.getByText('Contexte renommé').closest('.plai-card')
+    await userEvent.click(within(renamedRow).getByRole('button', { name: /^supprimer$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /oui, supprimer/i }))
+
+    await waitFor(() => expect(screen.queryByText('Contexte renommé')).not.toBeInTheDocument())
+  })
+
+  it('permet de renommer et supprimer la tâche courante', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte tâche modif')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte tâche modif'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Tache a corriger')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+
+    await waitFor(() => expect(screen.getByText('Tache a corriger')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    const input = screen.getByDisplayValue('Tache a corriger')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Tâche corrigée')
+    await userEvent.click(screen.getByRole('button', { name: /enregistrer/i }))
+
+    await waitFor(() => expect(screen.getByText('Tâche corrigée')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^supprimer$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /oui, supprimer/i }))
+
+    await waitFor(() => expect(screen.getByText(/aucune tâche/i)).toBeInTheDocument())
+  })
+
+  it('permet d\'annuler un "Fait" accidentel via la bannière persistante', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte annuler fait')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte annuler fait'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Tache par erreur')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+
+    await waitFor(() => expect(screen.getByText('Tache par erreur')).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /fait/i }))
+
+    expect(await screen.findByText(/tache par erreur.*marqué comme fait/i)).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: /annuler/i }))
+
+    await waitFor(() => expect(screen.getByText('Tache par erreur')).toBeInTheDocument())
   })
 })
