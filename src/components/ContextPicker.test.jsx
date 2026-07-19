@@ -60,6 +60,27 @@ describe('ContextPicker', () => {
     expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
   })
 
+  it('propose d\'activer les pictogrammes (désactivé par défaut) avec une explication', () => {
+    render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /activer les pictogrammes/i })).toBeInTheDocument()
+    expect(screen.getByText(/image à côté du titre/i)).toBeInTheDocument()
+  })
+
+  it('propose de désactiver les pictogrammes une fois activés', async () => {
+    const onTogglePictos = vi.fn()
+    render(
+      <ContextPicker
+        contexts={[]}
+        onSelect={vi.fn()}
+        onCreate={vi.fn()}
+        pictosEnabled
+        onTogglePictos={onTogglePictos}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /désactiver les pictogrammes/i }))
+    expect(onTogglePictos).toHaveBeenCalled()
+  })
+
   it('ne montre pas de bouton "Gérer" si la liste est vide', () => {
     render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /gérer/i })).not.toBeInTheDocument()

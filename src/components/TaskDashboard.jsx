@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { ReminderPicker } from './ReminderPicker.jsx'
 import { OnboardingChecklist } from './OnboardingChecklist.jsx'
+import { PictogramPicker } from './PictogramPicker.jsx'
 
 function EditTask({ task, onRenameTask, onDeleteTask, onDone }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -72,6 +73,10 @@ export function TaskDashboard({
   onRenameTask,
   onDeleteTask,
   showOnboarding = false,
+  pictosEnabled = false,
+  onSearchPicto,
+  onSelectPicto,
+  onClearPicto,
 }) {
   const [editingTask, setEditingTask] = useState(false)
 
@@ -118,6 +123,14 @@ export function TaskDashboard({
     <div className="plai-section">
       {contextReminder}
       <div className="plai-card text-center py-10">
+        {pictosEnabled && task.pictoUrl && (
+          <img
+            src={task.pictoUrl}
+            alt="Pictogramme de la tâche"
+            className="mx-auto mb-3"
+            style={{ width: 64, height: 64 }}
+          />
+        )}
         <p className="text-2xl font-serif mb-6">{task.title}</p>
         <div className="flex justify-center gap-3">
           <button type="button" className="plai-btn" onClick={() => onComplete(task.id)}>
@@ -144,6 +157,16 @@ export function TaskDashboard({
           </button>
         )}
       </div>
+
+      {pictosEnabled && (
+        <PictogramPicker
+          title={task.title}
+          pictoUrl={task.pictoUrl}
+          onSearch={onSearchPicto}
+          onSelect={(url) => onSelectPicto(task.id, url)}
+          onClear={() => onClearPicto(task.id)}
+        />
+      )}
 
       <ReminderPicker
         remindAt={task.remindAt}

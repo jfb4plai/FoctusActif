@@ -206,6 +206,35 @@ describe('TaskDashboard', () => {
     expect(screen.getByRole('button', { name: /ne pas supprimer/i })).toBeInTheDocument()
   })
 
+  it('n\'affiche pas le sélecteur de pictogramme si pictosEnabled est faux', () => {
+    const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null, pictoUrl: null }
+    render(
+      <TaskDashboard task={task} onComplete={vi.fn()} onDecompose={vi.fn()} onOpenCapture={vi.fn()} />,
+    )
+    expect(screen.queryByRole('button', { name: /chercher un pictogramme/i })).not.toBeInTheDocument()
+  })
+
+  it('affiche le sélecteur de pictogramme et relaie ses callbacks si pictosEnabled est vrai', async () => {
+    const onSearchPicto = vi.fn().mockResolvedValue([])
+    const onSelectPicto = vi.fn()
+    const onClearPicto = vi.fn()
+    const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null, pictoUrl: null }
+    render(
+      <TaskDashboard
+        task={task}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        pictosEnabled
+        onSearchPicto={onSearchPicto}
+        onSelectPicto={onSelectPicto}
+        onClearPicto={onClearPicto}
+      />,
+    )
+    await userEvent.click(screen.getByRole('button', { name: /chercher un pictogramme/i }))
+    expect(onSearchPicto).toHaveBeenCalledWith('Réviser')
+  })
+
   it('affiche le ReminderPicker et relaie ses callbacks', () => {
     const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null, remindAt: null }
     render(

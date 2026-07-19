@@ -88,6 +88,8 @@ export function ContextPicker({
   onRename,
   onDelete,
   showOnboarding = false,
+  pictosEnabled = false,
+  onTogglePictos,
 }) {
   const [label, setLabel] = useState('')
   const [managing, setManaging] = useState(false)
@@ -174,6 +176,18 @@ export function ContextPicker({
           <button type="button" className="plai-btn mt-7" onClick={handleCreate}>
             Créer
           </button>
+        </div>
+      )}
+
+      {!managing && (
+        <div className="plai-field mt-4">
+          <button type="button" className="plai-btn-ghost" onClick={onTogglePictos}>
+            {pictosEnabled ? 'Désactiver les pictogrammes' : 'Activer les pictogrammes'}
+          </button>
+          <p className="plai-help">
+            Ajoute une image à côté du titre de chaque tâche pour aider à comprendre d'un coup
+            d'œil. Optionnel, à activer seulement si ça vous aide.
+          </p>
         </div>
       )}
     </div>

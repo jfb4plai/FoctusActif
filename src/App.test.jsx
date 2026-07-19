@@ -1,7 +1,17 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import App from './App.jsx'
+
+vi.mock('./lib/supabaseClient.js', () => ({
+  supabase: {},
+}))
+
+vi.mock('./lib/arasaac.js', () => ({
+  searchPictograms: vi.fn().mockResolvedValue([
+    { id: 5064, url: 'https://api.arasaac.org/api/pictograms/5064', keywords: ['réviser'] },
+  ]),
+}))
 
 describe('App — parcours élève autonome', () => {
   beforeEach(() => {
@@ -257,5 +267,36 @@ describe('App — parcours élève autonome', () => {
     await screen.findByText(/marqué comme fait/i)
 
     expect(container.querySelectorAll('[data-testid="status-zone"]')).toHaveLength(1)
+  })
+
+  it('les pictogrammes sont désactivés par défaut et l\'élève peut les activer explicitement', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    expect(await screen.findByRole('button', { name: /activer les pictogrammes/i })).toBeInTheDocument()
+
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte picto')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte picto'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Reviser')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+    await waitFor(() => expect(screen.getByText('Reviser')).toBeInTheDocument())
+
+    // Désactivé par défaut : pas de sélecteur de pictogramme sur la tâche
+    expect(screen.queryByRole('button', { name: /chercher un pictogramme/i })).not.toBeInTheDocument()
+
+    // Retour aux contextes pour activer l'option explicitement
+    await userEvent.click(screen.getByRole('button', { name: /mes contextes/i }))
+    await userEvent.click(screen.getByRole('button', { name: /activer les pictogrammes/i }))
+    await userEvent.click(await screen.findByText('Contexte picto'))
+
+    await userEvent.click(screen.getByRole('button', { name: /chercher un pictogramme/i }))
+    const results = await screen.findAllByRole('button', { name: /choisir ce pictogramme/i })
+    await userEvent.click(results[0])
+
+    expect(await screen.findByRole('button', { name: /^changer$/i })).toBeInTheDocument()
+    expect(await screen.findByRole('button', { name: /retirer le pictogramme/i })).toBeInTheDocument()
   })
 })

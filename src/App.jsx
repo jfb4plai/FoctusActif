@@ -21,6 +21,9 @@ function AppInner({ storageMode }) {
     () => localStorage.getItem('focusactif_onboarding_done') === '1',
   )
   const [pushPromptDismissed, setPushPromptDismissed] = useState(false)
+  const [pictosEnabled, setPictosEnabled] = useState(
+    () => localStorage.getItem('focusactif_pictos_enabled') === '1',
+  )
 
   const showPushPrompt =
     storageMode === 'account' &&
@@ -152,6 +155,28 @@ function AppInner({ storageMode }) {
     refreshCurrentTask()
   }
 
+  function handleTogglePictos() {
+    const next = !pictosEnabled
+    localStorage.setItem('focusactif_pictos_enabled', next ? '1' : '0')
+    setPictosEnabled(next)
+  }
+
+  async function handleSearchPicto(word) {
+    const { supabase } = await import('./lib/supabaseClient.js')
+    const { searchPictograms } = await import('./lib/arasaac.js')
+    return searchPictograms(supabase, word)
+  }
+
+  async function handleSelectPicto(taskId, url) {
+    await store.setPicto(taskId, url)
+    await refreshCurrentTask()
+  }
+
+  async function handleClearPicto(taskId) {
+    await store.clearPicto(taskId)
+    await refreshCurrentTask()
+  }
+
   async function handleEnablePush() {
     const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
     if (vapidKey) {
@@ -194,6 +219,8 @@ function AppInner({ storageMode }) {
           onRename={handleRenameContext}
           onDelete={handleDeleteContext}
           showOnboarding={!onboardingDone}
+          pictosEnabled={pictosEnabled}
+          onTogglePictos={handleTogglePictos}
         />
       </>
     )
@@ -281,6 +308,10 @@ function AppInner({ storageMode }) {
         onRenameTask={handleRenameTask}
         onDeleteTask={handleDeleteTask}
         showOnboarding={!onboardingDone}
+        pictosEnabled={pictosEnabled}
+        onSearchPicto={handleSearchPicto}
+        onSelectPicto={handleSelectPicto}
+        onClearPicto={handleClearPicto}
       />
     </>
   )
