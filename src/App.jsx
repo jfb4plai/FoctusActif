@@ -17,6 +17,9 @@ function AppInner() {
   const [decomposing, setDecomposing] = useState(null)
   const [subtasks, setSubtasks] = useState([])
   const [justCompleted, setJustCompleted] = useState(null)
+  const [onboardingDone, setOnboardingDone] = useState(
+    () => localStorage.getItem('focusactif_onboarding_done') === '1',
+  )
 
   const refreshContexts = useCallback(async () => {
     if (!store) return
@@ -81,6 +84,10 @@ function AppInner() {
     await store.addTask(activeContextId, title)
     setCapturing(false)
     await refreshCurrentTask()
+    if (!onboardingDone) {
+      localStorage.setItem('focusactif_onboarding_done', '1')
+      setOnboardingDone(true)
+    }
   }
 
   async function handleComplete(taskId) {
@@ -136,6 +143,7 @@ function AppInner() {
         onCreate={handleCreateContext}
         onRename={handleRenameContext}
         onDelete={handleDeleteContext}
+        showOnboarding={!onboardingDone}
       />
     )
   }
@@ -215,6 +223,7 @@ function AppInner() {
         onClearReminder={handleClearReminder}
         onRenameTask={handleRenameTask}
         onDeleteTask={handleDeleteTask}
+        showOnboarding={!onboardingDone}
       />
     </>
   )

@@ -29,6 +29,27 @@ describe('TaskDashboard', () => {
     expect(screen.getByText(/une tâche, c'est une chose à faire/i)).toBeInTheDocument()
   })
 
+  it('affiche la checklist de mise en route (étape tâche non cochée) si showOnboarding', () => {
+    render(
+      <TaskDashboard
+        task={null}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        showOnboarding
+      />,
+    )
+    expect(screen.getByText(/mise en route/i)).toBeInTheDocument()
+    expect(screen.getByText(/○ Ajouter une première tâche/)).toBeInTheDocument()
+  })
+
+  it('ne montre pas la checklist si showOnboarding est faux', () => {
+    render(
+      <TaskDashboard task={null} onComplete={vi.fn()} onDecompose={vi.fn()} onOpenCapture={vi.fn()} />,
+    )
+    expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
+  })
+
   it('explique ce que font les boutons "Fait" et "Décomposer"', () => {
     const task = { id: 't1', title: 'Choisir le sujet', status: 'todo', parentTaskId: null }
     render(

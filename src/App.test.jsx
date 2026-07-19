@@ -1,9 +1,13 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, beforeEach } from 'vitest'
 import App from './App.jsx'
 
 describe('App — parcours élève autonome', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   it('créer un contexte → capturer une tâche → décomposer → terminer', async () => {
     render(<App />)
 
@@ -145,5 +149,34 @@ describe('App — parcours élève autonome', () => {
     await userEvent.click(screen.getByRole('button', { name: /annuler/i }))
 
     await waitFor(() => expect(screen.getByText('Tache par erreur')).toBeInTheDocument())
+  })
+
+  it('affiche la checklist de mise en route puis la fait disparaître définitivement après la première tâche', async () => {
+    const { unmount } = render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    expect(await screen.findByText(/mise en route/i)).toBeInTheDocument()
+
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Onboarding test')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Onboarding test'))
+
+    // Toujours visible : contexte créé, mais pas encore de tâche
+    expect(await screen.findByText(/mise en route/i)).toBeInTheDocument()
+    expect(screen.getByText(/✓ Créer un premier contexte/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Première tâche')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+
+    await waitFor(() => expect(screen.getByText('Première tâche')).toBeInTheDocument())
+    expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
+
+    // La checklist ne doit jamais réapparaître, même après un rechargement complet
+    unmount()
+    render(<App />)
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    expect(await screen.findByText('Onboarding test')).toBeInTheDocument()
+    expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
   })
 })

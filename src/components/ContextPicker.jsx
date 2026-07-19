@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { OnboardingChecklist } from './OnboardingChecklist.jsx'
 
 const DEFAULT_EMOJI = '📌'
 
@@ -80,7 +81,14 @@ function ManageContextRow({ context, onRename, onDelete }) {
   )
 }
 
-export function ContextPicker({ contexts, onSelect, onCreate, onRename, onDelete }) {
+export function ContextPicker({
+  contexts,
+  onSelect,
+  onCreate,
+  onRename,
+  onDelete,
+  showOnboarding = false,
+}) {
   const [label, setLabel] = useState('')
   const [managing, setManaging] = useState(false)
   const inputId = useId()
@@ -95,6 +103,10 @@ export function ContextPicker({ contexts, onSelect, onCreate, onRename, onDelete
   return (
     <div className="plai-section">
       <h2>Mes contextes</h2>
+
+      {showOnboarding && (
+        <OnboardingChecklist contextDone={contexts.length > 0} taskDone={false} />
+      )}
 
       {contexts.length === 0 && (
         <p className="plai-empty">Aucun contexte pour l'instant. Créez-en un pour commencer.</p>

@@ -40,6 +40,26 @@ describe('ContextPicker', () => {
     expect(onCreate).toHaveBeenCalledWith('Devoirs', expect.any(String))
   })
 
+  it('affiche la checklist de mise en route quand showOnboarding est vrai', () => {
+    render(
+      <ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} showOnboarding />,
+    )
+    expect(screen.getByText(/mise en route/i)).toBeInTheDocument()
+    expect(screen.getByText(/○ Créer un premier contexte/)).toBeInTheDocument()
+  })
+
+  it('coche l\'étape contexte une fois qu\'un contexte existe', () => {
+    render(
+      <ContextPicker contexts={CONTEXTS} onSelect={vi.fn()} onCreate={vi.fn()} showOnboarding />,
+    )
+    expect(screen.getByText(/✓ Créer un premier contexte/)).toBeInTheDocument()
+  })
+
+  it('ne montre pas la checklist si showOnboarding est faux', () => {
+    render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
+    expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
+  })
+
   it('ne montre pas de bouton "Gérer" si la liste est vide', () => {
     render(<ContextPicker contexts={[]} onSelect={vi.fn()} onCreate={vi.fn()} />)
     expect(screen.queryByRole('button', { name: /gérer/i })).not.toBeInTheDocument()

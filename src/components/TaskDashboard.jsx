@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import { ReminderPicker } from './ReminderPicker.jsx'
+import { OnboardingChecklist } from './OnboardingChecklist.jsx'
 
 function EditTask({ task, onRenameTask, onDeleteTask, onDone }) {
   const [confirmingDelete, setConfirmingDelete] = useState(false)
@@ -70,6 +71,7 @@ export function TaskDashboard({
   onClearReminder,
   onRenameTask,
   onDeleteTask,
+  showOnboarding = false,
 }) {
   const [editingTask, setEditingTask] = useState(false)
 
@@ -83,6 +85,7 @@ export function TaskDashboard({
     return (
       <div className="plai-section">
         {contextReminder}
+        {showOnboarding && <OnboardingChecklist contextDone taskDone={false} />}
         <p className="plai-empty">Aucune tâche ici pour l'instant.</p>
         <p className="plai-help mb-4">
           Une tâche, c'est une chose à faire, comme « Ranger mon sac » ou « Faire mes devoirs de
