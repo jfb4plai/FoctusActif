@@ -15,6 +15,23 @@ function formatRelative(remindAt) {
   return `dans ${days} jour${days > 1 ? 's' : ''}`
 }
 
+function presetInMinutes(minutes) {
+  return new Date(Date.now() + minutes * 60000)
+}
+
+function presetTonight() {
+  const target = new Date()
+  target.setHours(18, 0, 0, 0)
+  if (target.getTime() <= Date.now()) target.setDate(target.getDate() + 1)
+  return target
+}
+
+function presetTomorrowMorning() {
+  const target = new Date(Date.now() + 24 * 3600000)
+  target.setHours(8, 0, 0, 0)
+  return target
+}
+
 export function ReminderPicker({ remindAt, onSetReminder, onClearReminder }) {
   const [value, setValue] = useState('')
   const inputId = useId()
@@ -23,6 +40,10 @@ export function ReminderPicker({ remindAt, onSetReminder, onClearReminder }) {
     if (!value) return
     onSetReminder(new Date(value).toISOString())
     setValue('')
+  }
+
+  function handlePreset(compute) {
+    onSetReminder(compute().toISOString())
   }
 
   if (remindAt) {
@@ -49,6 +70,33 @@ export function ReminderPicker({ remindAt, onSetReminder, onClearReminder }) {
       <label htmlFor={inputId} className="plai-label">
         Me le rappeler à
       </label>
+      <div className="flex flex-wrap gap-2 mb-2">
+        <button
+          type="button"
+          className="plai-btn-ghost"
+          onClick={() => handlePreset(() => presetInMinutes(15))}
+        >
+          +15 min
+        </button>
+        <button
+          type="button"
+          className="plai-btn-ghost"
+          onClick={() => handlePreset(() => presetInMinutes(30))}
+        >
+          +30 min
+        </button>
+        <button type="button" className="plai-btn-ghost" onClick={() => handlePreset(presetTonight)}>
+          Ce soir (18h)
+        </button>
+        <button
+          type="button"
+          className="plai-btn-ghost"
+          onClick={() => handlePreset(presetTomorrowMorning)}
+        >
+          Demain matin (8h)
+        </button>
+      </div>
+      <p className="plai-help mb-2">Ou choisissez une date et une heure précises :</p>
       <input
         id={inputId}
         type="datetime-local"

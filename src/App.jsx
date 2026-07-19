@@ -137,6 +137,16 @@ function AppInner({ storageMode }) {
     setSubtasks(await store.listSubtasks(decomposing))
   }
 
+  async function handleRenameSubtask(subtaskId, newTitle) {
+    await store.renameTask(subtaskId, newTitle)
+    setSubtasks(await store.listSubtasks(decomposing))
+  }
+
+  async function handleDeleteSubtask(subtaskId) {
+    await store.deleteTask(subtaskId)
+    setSubtasks(await store.listSubtasks(decomposing))
+  }
+
   function handleCloseDecompose() {
     setDecomposing(null)
     refreshCurrentTask()
@@ -201,6 +211,8 @@ function AppInner({ storageMode }) {
         subtasks={subtasks}
         onAddSubtask={handleAddSubtask}
         onClose={handleCloseDecompose}
+        onRenameSubtask={handleRenameSubtask}
+        onDeleteSubtask={handleDeleteSubtask}
       />
     )
   }
@@ -233,18 +245,22 @@ function AppInner({ storageMode }) {
       >
         ← Mes contextes
       </button>
-      {justCompleted && (
-        <p className="plai-success flex items-center justify-between gap-3" role="status">
-          <span>« {justCompleted.title} » marqué comme fait.</span>
-          <button type="button" className="plai-btn-ghost" onClick={handleUndoComplete}>
-            ↩ Annuler
-          </button>
-        </p>
-      )}
-      {reminderDue && (
-        <p className="plai-success" role="status">
-          Rappel : c'est le moment pour « {currentTask?.title} ».
-        </p>
+      {(justCompleted || reminderDue) && (
+        <div className="plai-success" role="status" data-testid="status-zone">
+          {justCompleted && (
+            <p className="flex items-center justify-between gap-3">
+              <span>« {justCompleted.title} » marqué comme fait.</span>
+              <button type="button" className="plai-btn-ghost" onClick={handleUndoComplete}>
+                ↩ Annuler
+              </button>
+            </p>
+          )}
+          {reminderDue && (
+            <p className={justCompleted ? 'mt-2' : ''}>
+              Rappel : c'est le moment pour « {currentTask?.title} ».
+            </p>
+          )}
+        </div>
       )}
       <TaskDashboard
         task={currentTask}

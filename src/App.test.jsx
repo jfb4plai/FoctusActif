@@ -208,4 +208,54 @@ describe('App — parcours élève autonome', () => {
 
     expect(screen.getAllByRole('button', { name: /annuler/i })).toHaveLength(1)
   })
+
+  it('permet de renommer et supprimer une sous-étape depuis l\'écran Décomposer', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte sous-tache')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte sous-tache'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Tache principale')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+    await waitFor(() => expect(screen.getByText('Tache principale')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /décomposer/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Sous etape typo')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+    await waitFor(() => expect(screen.getByText('Sous etape typo')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    const input = screen.getByDisplayValue('Sous etape typo')
+    await userEvent.clear(input)
+    await userEvent.type(input, 'Sous-étape corrigée')
+    await userEvent.click(screen.getByRole('button', { name: /enregistrer/i }))
+    await waitFor(() => expect(screen.getByText('Sous-étape corrigée')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    await userEvent.click(screen.getByRole('button', { name: /^supprimer$/i }))
+    await userEvent.click(screen.getByRole('button', { name: /oui, supprimer/i }))
+    await waitFor(() => expect(screen.queryByText('Sous-étape corrigée')).not.toBeInTheDocument())
+  })
+
+  it('regroupe le statut "Fait" dans une seule zone (pas deux bandeaux empilés)', async () => {
+    const { container } = render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte zone statut')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte zone statut'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Tache statut')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+    await waitFor(() => expect(screen.getByText('Tache statut')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /fait/i }))
+    await screen.findByText(/marqué comme fait/i)
+
+    expect(container.querySelectorAll('[data-testid="status-zone"]')).toHaveLength(1)
+  })
 })

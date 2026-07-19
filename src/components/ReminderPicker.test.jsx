@@ -41,4 +41,52 @@ describe('ReminderPicker', () => {
     render(<ReminderPicker remindAt={remindAt} onSetReminder={vi.fn()} onClearReminder={vi.fn()} />)
     expect(screen.getByText(/dans \d+ heures?/i)).toBeInTheDocument()
   })
+
+  it('propose des raccourcis de rappel rapide', () => {
+    render(<ReminderPicker remindAt={null} onSetReminder={vi.fn()} onClearReminder={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /\+15 min/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /\+30 min/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ce soir/i })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /demain matin/i })).toBeInTheDocument()
+  })
+
+  it('le raccourci +15 min déclenche onSetReminder ~15 minutes dans le futur', async () => {
+    const onSetReminder = vi.fn()
+    render(<ReminderPicker remindAt={null} onSetReminder={onSetReminder} onClearReminder={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /\+15 min/i }))
+
+    expect(onSetReminder).toHaveBeenCalledTimes(1)
+    const iso = onSetReminder.mock.calls[0][0]
+    const diffMinutes = (new Date(iso).getTime() - Date.now()) / 60000
+    expect(diffMinutes).toBeGreaterThan(14)
+    expect(diffMinutes).toBeLessThan(16)
+  })
+
+  it('le raccourci "Demain matin" programme un rappel le lendemain à 8h', async () => {
+    const onSetReminder = vi.fn()
+    render(<ReminderPicker remindAt={null} onSetReminder={onSetReminder} onClearReminder={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /demain matin/i }))
+
+    const iso = onSetReminder.mock.calls[0][0]
+    const target = new Date(iso)
+    const tomorrow = new Date(Date.now() + 24 * 3600000)
+    expect(target.getDate()).toBe(tomorrow.getDate())
+    expect(target.getHours()).toBe(8)
+    expect(target.getMinutes()).toBe(0)
+  })
+
+  it('le raccourci "Ce soir" programme un rappel à 18h', async () => {
+    const onSetReminder = vi.fn()
+    render(<ReminderPicker remindAt={null} onSetReminder={onSetReminder} onClearReminder={vi.fn()} />)
+
+    await userEvent.click(screen.getByRole('button', { name: /ce soir/i }))
+
+    const iso = onSetReminder.mock.calls[0][0]
+    const target = new Date(iso)
+    expect(target.getHours()).toBe(18)
+    expect(target.getMinutes()).toBe(0)
+    expect(target.getTime()).toBeGreaterThan(Date.now())
+  })
 })
