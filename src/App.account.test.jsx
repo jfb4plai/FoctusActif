@@ -40,4 +40,22 @@ describe('App — choix du mode de stockage', () => {
 
     expect(await screen.findByLabelText(/nom du contexte/i)).toBeInTheDocument()
   })
+
+  it('permet de sélectionner un contexte déjà existant après connexion', async () => {
+    mockStore.listContexts.mockResolvedValueOnce([
+      { id: 'c1', label: 'routine du matin', emoji: '📌', locked: false },
+      { id: 'c2', label: 'maison', emoji: '📌', locked: false },
+    ])
+
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /créer un compte|se connecter/i }))
+    await userEvent.type(await screen.findByLabelText(/adresse e-mail/i), 'test@example.com')
+    await userEvent.type(screen.getByLabelText(/mot de passe/i), 'motdepasse123')
+    await userEvent.click(screen.getByRole('button', { name: /se connecter/i }))
+
+    await userEvent.click(await screen.findByText('routine du matin'))
+
+    expect(screen.queryByLabelText(/nom du contexte/i)).not.toBeInTheDocument()
+  })
 })

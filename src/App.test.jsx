@@ -39,4 +39,21 @@ describe('App — parcours élève autonome', () => {
     // Le parent redevient la tâche courante
     await waitFor(() => expect(screen.getByText('Faire l\'exposé')).toBeInTheDocument())
   })
+
+  it('permet de revenir à la liste des contextes depuis un contexte sélectionné', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Retour contexte test')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Retour contexte test'))
+
+    await waitFor(() => expect(screen.getByText(/ajouter une tâche/i)).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /mes contextes/i }))
+
+    expect(await screen.findByLabelText(/nom du contexte/i)).toBeInTheDocument()
+    expect(screen.getByText('Retour contexte test')).toBeInTheDocument()
+  })
 })

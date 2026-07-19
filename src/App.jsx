@@ -129,6 +129,13 @@ function AppInner() {
 
   return (
     <>
+      <button
+        type="button"
+        className="plai-btn-ghost mb-3"
+        onClick={() => setActiveContextId(null)}
+      >
+        ← Mes contextes
+      </button>
       {reminderDue && (
         <p className="plai-success" role="status">
           Rappel : c'est le moment pour « {currentTask?.title} ».
