@@ -21,11 +21,21 @@ describe('TaskDashboard', () => {
     expect(onComplete).toHaveBeenCalledWith('t1')
   })
 
-  it('affiche un état vide invitant à capturer une tâche s\'il n\'y en a aucune', () => {
+  it('affiche un état vide expliquant ce qu\'est une tâche et quoi faire', () => {
     render(
       <TaskDashboard task={null} onComplete={vi.fn()} onDecompose={vi.fn()} onOpenCapture={vi.fn()} />,
     )
     expect(screen.getByText(/aucune tâche/i)).toBeInTheDocument()
+    expect(screen.getByText(/une tâche, c'est une chose à faire/i)).toBeInTheDocument()
+  })
+
+  it('explique ce que font les boutons "Fait" et "Décomposer"', () => {
+    const task = { id: 't1', title: 'Choisir le sujet', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard task={task} onComplete={vi.fn()} onDecompose={vi.fn()} onOpenCapture={vi.fn()} />,
+    )
+    expect(screen.getByText(/marque cette tâche comme terminée/i)).toBeInTheDocument()
+    expect(screen.getByText(/la diviser en plusieurs petites étapes/i)).toBeInTheDocument()
   })
 
   it('rappelle le contexte actif (emoji + nom), avec ou sans tâche', () => {

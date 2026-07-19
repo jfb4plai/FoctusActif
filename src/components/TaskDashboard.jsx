@@ -21,7 +21,11 @@ export function TaskDashboard({
     return (
       <div className="plai-section">
         {contextReminder}
-        <p className="plai-empty">Aucune tâche ici. Ajoutez-en une pour commencer.</p>
+        <p className="plai-empty">Aucune tâche ici pour l'instant.</p>
+        <p className="plai-help mb-4">
+          Une tâche, c'est une chose à faire, comme « Ranger mon sac » ou « Faire mes devoirs de
+          maths ». Cliquez sur le bouton ci-dessous pour en ajouter une.
+        </p>
         {!contextLocked && (
           <button type="button" className="plai-btn mt-4" onClick={onOpenCapture}>
             + Ajouter une tâche
@@ -46,6 +50,11 @@ export function TaskDashboard({
             </button>
           )}
         </div>
+        <p className="plai-help mt-4">
+          « Fait » marque cette tâche comme terminée.
+          {!contextLocked && !task.parentTaskId &&
+            ' « Décomposer » permet de la diviser en plusieurs petites étapes à faire une par une.'}
+        </p>
       </div>
 
       <ReminderPicker
