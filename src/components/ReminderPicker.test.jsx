@@ -29,4 +29,16 @@ describe('ReminderPicker', () => {
     await userEvent.click(screen.getByRole('button', { name: /retirer le rappel/i }))
     expect(onClearReminder).toHaveBeenCalled()
   })
+
+  it('affiche un temps relatif quand le rappel est dans quelques minutes', () => {
+    const remindAt = new Date(Date.now() + 5 * 60000).toISOString()
+    render(<ReminderPicker remindAt={remindAt} onSetReminder={vi.fn()} onClearReminder={vi.fn()} />)
+    expect(screen.getByText(/dans \d+ minutes?/i)).toBeInTheDocument()
+  })
+
+  it('affiche un temps relatif en heures quand le rappel est le jour même', () => {
+    const remindAt = new Date(Date.now() + 3 * 3600000).toISOString()
+    render(<ReminderPicker remindAt={remindAt} onSetReminder={vi.fn()} onClearReminder={vi.fn()} />)
+    expect(screen.getByText(/dans \d+ heures?/i)).toBeInTheDocument()
+  })
 })

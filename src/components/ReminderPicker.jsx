@@ -1,5 +1,20 @@
 import { useId, useState } from 'react'
 
+function formatRelative(remindAt) {
+  const diffMs = new Date(remindAt).getTime() - Date.now()
+  if (diffMs <= 0) return null
+
+  const minutes = Math.round(diffMs / 60000)
+  if (minutes < 1) return "dans moins d'une minute"
+  if (minutes < 60) return `dans ${minutes} minute${minutes > 1 ? 's' : ''}`
+
+  const hours = Math.round(minutes / 60)
+  if (hours < 24) return `dans ${hours} heure${hours > 1 ? 's' : ''}`
+
+  const days = Math.round(hours / 24)
+  return `dans ${days} jour${days > 1 ? 's' : ''}`
+}
+
 export function ReminderPicker({ remindAt, onSetReminder, onClearReminder }) {
   const [value, setValue] = useState('')
   const inputId = useId()
@@ -15,9 +30,13 @@ export function ReminderPicker({ remindAt, onSetReminder, onClearReminder }) {
       dateStyle: 'short',
       timeStyle: 'short',
     })
+    const relative = formatRelative(remindAt)
     return (
       <div className="plai-field">
-        <p className="plai-help">Rappel prévu : {formatted}</p>
+        <p className="plai-help">
+          Rappel prévu : {formatted}
+          {relative && ` (${relative})`}
+        </p>
         <button type="button" className="plai-btn-ghost" onClick={onClearReminder}>
           Retirer le rappel
         </button>
