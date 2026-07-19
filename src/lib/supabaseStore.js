@@ -45,16 +45,16 @@ export function createSupabaseStore(supabase) {
           step_order: stepOrder,
           done_at: null,
         })
-        .select('id, context_id, title, status, parent_task_id, step_order, created_at, done_at')
+        .select('id, context_id, title, status, parent_task_id, step_order, created_at, done_at, picto_url')
         .single()
       if (error) throw error
-      return { ...toTask(data), remindAt: null, reminderSent: false }
+      return { ...toTask(data), remindAt: null, reminderSent: false, pictoUrl: null }
     },
 
     async listSubtasks(parentTaskId) {
       const { data, error } = await supabase
         .from('focus_tasks')
-        .select('id, context_id, title, status, parent_task_id, step_order, created_at, done_at')
+        .select('id, context_id, title, status, parent_task_id, step_order, created_at, done_at, picto_url')
         .eq('parent_task_id', parentTaskId)
         .order('step_order', { ascending: true })
       if (error) throw error
@@ -132,6 +132,16 @@ export function createSupabaseStore(supabase) {
         .eq('id', taskId)
       if (error) throw error
     },
+
+    async setPicto(taskId, url) {
+      const { error } = await supabase.from('focus_tasks').update({ picto_url: url }).eq('id', taskId)
+      if (error) throw error
+    },
+
+    async clearPicto(taskId) {
+      const { error } = await supabase.from('focus_tasks').update({ picto_url: null }).eq('id', taskId)
+      if (error) throw error
+    },
   }
 }
 
@@ -172,5 +182,6 @@ function toTask(row) {
     stepOrder: row.step_order,
     createdAt: row.created_at,
     doneAt: row.done_at,
+    pictoUrl: row.picto_url ?? null,
   }
 }

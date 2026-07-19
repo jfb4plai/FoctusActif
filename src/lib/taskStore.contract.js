@@ -216,5 +216,26 @@ export function runTaskStoreContractTests(createStore) {
       expect(next.status).toBe('todo')
       expect(next.doneAt).toBeNull()
     })
+
+    it('une tâche sans picto a pictoUrl null par défaut', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const task = await store.addTask(context.id, 'Ranger sa chambre')
+      expect(task.pictoUrl).toBeNull()
+    })
+
+    it('setPicto définit pictoUrl, clearPicto l\'efface', async () => {
+      const store = await createStore()
+      const context = await store.addContext('Maison', '🏠')
+      const task = await store.addTask(context.id, 'Ranger sa chambre')
+
+      await store.setPicto(task.id, 'https://api.arasaac.org/api/pictograms/5064')
+      let next = await store.getNextTask(context.id)
+      expect(next.pictoUrl).toBe('https://api.arasaac.org/api/pictograms/5064')
+
+      await store.clearPicto(task.id)
+      next = await store.getNextTask(context.id)
+      expect(next.pictoUrl).toBeNull()
+    })
   })
 }

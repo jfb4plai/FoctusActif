@@ -62,6 +62,7 @@ export async function createLocalStore(dbName = 'focusactif') {
         doneAt: null,
         remindAt: null,
         reminderSent: false,
+        pictoUrl: null,
       }
       await put(db, 'tasks', task)
       return task
@@ -145,6 +146,18 @@ export async function createLocalStore(dbName = 'focusactif') {
       const task = await get(db, 'tasks', taskId)
       if (!task) return
       await put(db, 'tasks', { ...task, status: 'todo', doneAt: null })
+    },
+
+    async setPicto(taskId, url) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, pictoUrl: url })
+    },
+
+    async clearPicto(taskId) {
+      const task = await get(db, 'tasks', taskId)
+      if (!task) return
+      await put(db, 'tasks', { ...task, pictoUrl: null })
     },
   }
 }
