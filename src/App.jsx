@@ -151,6 +151,27 @@ function App() {
   const [storageMode, setStorageMode] = useState(null)
   const [authed, setAuthed] = useState(false)
 
+  useEffect(() => {
+    if (storageMode !== 'account' || !authed) return
+    if (!('serviceWorker' in navigator)) return
+
+    let cancelled = false
+
+    async function register() {
+      await navigator.serviceWorker.register('/sw.js')
+      const vapidKey = import.meta.env.VITE_VAPID_PUBLIC_KEY
+      if (!vapidKey || cancelled) return
+      const { supabase } = await import('./lib/supabaseClient.js')
+      const { subscribeToPush } = await import('./lib/pushSubscription.js')
+      await subscribeToPush(supabase, vapidKey)
+    }
+
+    register()
+    return () => {
+      cancelled = true
+    }
+  }, [storageMode, authed])
+
   if (!storageMode) {
     return (
       <StorageSetup
