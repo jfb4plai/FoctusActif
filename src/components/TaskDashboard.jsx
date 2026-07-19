@@ -24,7 +24,7 @@ function EditTask({ task, onRenameTask, onDeleteTask, onDone }) {
             Oui, supprimer
           </button>
           <button type="button" className="plai-btn-ghost" onClick={() => setConfirmingDelete(false)}>
-            Annuler
+            Ne pas supprimer
           </button>
         </div>
       </div>
@@ -52,7 +52,7 @@ function EditTask({ task, onRenameTask, onDeleteTask, onDone }) {
           Supprimer
         </button>
         <button type="button" className="plai-btn-ghost" onClick={onDone}>
-          Annuler
+          Fermer
         </button>
       </div>
     </div>

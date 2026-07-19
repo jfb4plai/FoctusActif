@@ -184,6 +184,28 @@ describe('TaskDashboard', () => {
     expect(onDeleteTask).toHaveBeenCalledWith('t1')
   })
 
+  it('n\'utilise jamais le libellé "Annuler" en mode édition (ambigu avec l\'annulation d\'un Fait)', async () => {
+    const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null }
+    render(
+      <TaskDashboard
+        task={task}
+        onComplete={vi.fn()}
+        onDecompose={vi.fn()}
+        onOpenCapture={vi.fn()}
+        onRenameTask={vi.fn()}
+        onDeleteTask={vi.fn()}
+      />,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+    expect(screen.queryByRole('button', { name: /^annuler$/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /fermer/i })).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /^supprimer$/i }))
+    expect(screen.queryByRole('button', { name: /^annuler$/i })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ne pas supprimer/i })).toBeInTheDocument()
+  })
+
   it('affiche le ReminderPicker et relaie ses callbacks', () => {
     const task = { id: 't1', title: 'Réviser', status: 'todo', parentTaskId: null, remindAt: null }
     render(

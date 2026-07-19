@@ -179,4 +179,33 @@ describe('App — parcours élève autonome', () => {
     expect(await screen.findByText('Onboarding test')).toBeInTheDocument()
     expect(screen.queryByText(/mise en route/i)).not.toBeInTheDocument()
   })
+
+  it('ne montre jamais deux boutons "Annuler" ambigus en même temps (bannière Fait + édition)', async () => {
+    render(<App />)
+
+    await userEvent.click(await screen.findByRole('button', { name: /sans compte/i }))
+    await userEvent.type(await screen.findByLabelText(/nom du contexte/i), 'Contexte collision annuler')
+    await userEvent.click(screen.getByRole('button', { name: /créer/i }))
+    await userEvent.click(await screen.findByText('Contexte collision annuler'))
+
+    await userEvent.click(await screen.findByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Premiere tache')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+    await waitFor(() => expect(screen.getByText('Premiere tache')).toBeInTheDocument())
+
+    await userEvent.click(screen.getByRole('button', { name: /ajouter une tâche/i }))
+    await userEvent.type(screen.getByPlaceholderText(/ex :/i), 'Deuxieme tache')
+    await userEvent.click(screen.getByRole('button', { name: /^ajouter$/i }))
+
+    // Termine la première tâche : la bannière "Annuler" apparaît, la deuxième devient courante
+    await waitFor(() => expect(screen.getByText('Premiere tache')).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /fait/i }))
+    expect(await screen.findByText(/premiere tache.*marqué comme fait/i)).toBeInTheDocument()
+
+    // Ouvre l'édition de la tâche suivante pendant que la bannière est encore visible
+    await waitFor(() => expect(screen.getByText('Deuxieme tache')).toBeInTheDocument())
+    await userEvent.click(screen.getByRole('button', { name: /modifier/i }))
+
+    expect(screen.getAllByRole('button', { name: /annuler/i })).toHaveLength(1)
+  })
 })
