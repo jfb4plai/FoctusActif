@@ -320,6 +320,19 @@ function AppInner({ storageMode }) {
 function App() {
   const [storageMode, setStorageMode] = useState(null)
   const [authed, setAuthed] = useState(false)
+  const [passwordRecovery, setPasswordRecovery] = useState(false)
+
+  useEffect(() => {
+    if (storageMode !== 'account') return
+    let unsubscribe = () => {}
+    import('./lib/supabaseClient.js').then(({ supabase }) => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') setPasswordRecovery(true)
+      })
+      unsubscribe = () => subscription.unsubscribe()
+    })
+    return () => unsubscribe()
+  }, [storageMode])
 
   useEffect(() => {
     if (storageMode !== 'account' || !authed) return
@@ -342,14 +355,29 @@ function App() {
     )
   }
 
-  if (storageMode === 'account' && !authed) {
+  if (storageMode === 'account' && (!authed || passwordRecovery)) {
     return (
       <Auth
+        passwordRecovery={passwordRecovery}
+        onUpdatePassword={async (newPassword) => {
+          const { supabase } = await import('./lib/supabaseClient.js')
+          const { error } = await supabase.auth.updateUser({ password: newPassword })
+          if (error) throw error
+          setPasswordRecovery(false)
+          setAuthed(true)
+        }}
         onSignIn={async (email, password) => {
           const { supabase } = await import('./lib/supabaseClient.js')
           const { error } = await supabase.auth.signInWithPassword({ email, password })
           if (error) throw error
           setAuthed(true)
+        }}
+        onForgotPassword={async (email) => {
+          const { supabase } = await import('./lib/supabaseClient.js')
+          const { error } = await supabase.auth.resetPasswordForEmail(email, {
+            redirectTo: window.location.origin,
+          })
+          if (error) throw error
         }}
         onSignUp={async (email, password) => {
           const { supabase } = await import('./lib/supabaseClient.js')
