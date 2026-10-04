@@ -25,3 +25,8 @@ dist-ssr
 .vercel
 supabase/.temp
 .env*.local
+
+# Dependances et secrets (ajoute 2026-10-04)
+.env
+.env.*
+!.env*.example
